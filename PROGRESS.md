@@ -38,16 +38,25 @@ sdk install java 11.0.25-zulu
 Also note: `gh codespace ssh` does **not** persist `cd` between calls, and
 `gradlew` sits at each chapter's `2-*/` root, not in `api/`. Every command needs
 its own `cd`. **The Gradle root also moves between chapters**: Ch03's is
-`Chapter03/2-basic-rest-services/`, Ch04's is `Chapter04/` itself. Check
-`settings.gradle` before assuming.
+`Chapter03/2-basic-rest-services/`, Ch04's and Ch05's are `ChapterNN/` itself.
+Check `settings.gradle` before assuming.
+
+### Killing services between chapters
+
+- **Never `pkill -f "<name>"` when the remote command line also contains that
+  name** — it matches its own shell and the SSH session dies with exit 255. Use
+  `fuser -k <port>/tcp` per port, or the bracket trick `pkill -f 'pr[o]duct'`.
+- **Free the ports before starting the next chapter.** Ch04's jars still held
+  7000-7003 during the first Ch05 attempt, which made the composite fail to start
+  and looked exactly like a code fault.
 
 ## Chapters
 
 | Ch | Topic | Code | State | Evidence | Fork commit |
 |----|-------|------|-------|----------|-------------|
 | 03 | Basic REST services (4 microservices, multi-module Gradle) | yes | done, build + run verified | Chapter03/FINDINGS/FINDINGS.md | b567f21 |
-| 04 | Composite service, aggregation + validation | yes | done, book's full suite passed | Chapter04/FINDINGS/FINDINGS.md | pending |
-| 05 | | yes | todo | | |
+| 04 | Composite service, aggregation + validation | yes | done, book's full suite passed | Chapter04/FINDINGS/FINDINGS.md | 4b509f3 |
+| 05 | Swagger/OpenAPI documentation of the API | yes | done, spec verified live | Chapter05/FINDINGS/FINDINGS.md | pending |
 | 06 | | yes | todo | | |
 | 07 | | yes | todo | | |
 | 09 | | yes | todo | | |
