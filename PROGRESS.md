@@ -91,7 +91,7 @@ The symptom implicates the composite; the cause is a missing container.
 | 06 | Persistence (Mongo + MySQL), MapStruct, tests | yes | done, tests run + 20/20 suite | Chapter06/FINDINGS/FINDINGS.md | de037d8 |
 | 07 | Events / async messaging (Spring Cloud Stream) | yes | done, suite + event flow passed | Chapter07/FINDINGS/FINDINGS.md | a81e944 |
 | 09 | Service discovery with Netflix Eureka | yes | done, all four registered | Chapter09/FINDINGS/FINDINGS.md | 96a570b |
-| 10 | Spring Cloud Gateway over Eureka discovery | yes | done, 24/24 + gateway 200s | Chapter10/FINDINGS/FINDINGS.md | pending |
+| 10 | Spring Cloud Gateway over Eureka discovery | yes | done, 24/24 + gateway 200s | Chapter10/FINDINGS/FINDINGS.md | 758586d |
 | 11 | | yes | todo | | |
 | 12 | | yes | todo | | |
 | 13 | | yes | todo | | |
