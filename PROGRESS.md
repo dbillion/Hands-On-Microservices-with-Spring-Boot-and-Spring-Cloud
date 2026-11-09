@@ -37,14 +37,16 @@ sdk install java 11.0.25-zulu
 
 Also note: `gh codespace ssh` does **not** persist `cd` between calls, and
 `gradlew` sits at each chapter's `2-*/` root, not in `api/`. Every command needs
-its own `cd`.
+its own `cd`. **The Gradle root also moves between chapters**: Ch03's is
+`Chapter03/2-basic-rest-services/`, Ch04's is `Chapter04/` itself. Check
+`settings.gradle` before assuming.
 
 ## Chapters
 
 | Ch | Topic | Code | State | Evidence | Fork commit |
 |----|-------|------|-------|----------|-------------|
-| 03 | Basic REST services (4 microservices, multi-module Gradle) | yes | done, build + run verified | Chapter03/FINDINGS/FINDINGS.md | pending |
-| 04 | | yes | todo | | |
+| 03 | Basic REST services (4 microservices, multi-module Gradle) | yes | done, build + run verified | Chapter03/FINDINGS/FINDINGS.md | b567f21 |
+| 04 | Composite service, aggregation + validation | yes | done, book's full suite passed | Chapter04/FINDINGS/FINDINGS.md | pending |
 | 05 | | yes | todo | | |
 | 06 | | yes | todo | | |
 | 07 | | yes | todo | | |
@@ -78,12 +80,36 @@ Started ProductServiceApplication in 2.562 seconds
 Not verified in ch03: review/recommendation/composite never started, no
 cross-service call, tests skipped.
 
+## What Chapter 04 verified
+
+```
+BUILD SUCCESSFUL in 3s          warm daemon, not a code change
+ports 7000-7003 listening, composite health UP
+/product-composite/1  -> 200: product 1, 3 recommendations, 3 reviews,
+                          serviceAddresses cmp/pro/rec/rev all present
+book's test-em-all.bash: ALL OK
+   200 productId 1,   3 recs, 3 revs
+   404 "No product found for productId: 13"
+   200 productId 113, 0 recs, 3 revs
+   200 productId 213, 3 recs, 0 revs
+   422 "Invalid productId: -1"
+   400 "Type mismatch."   (/product-composite/invalidProductId)
+```
+
+Not verified in ch04: `docker-compose.yml` never started; the `spring.profiles:
+docker` profile (ports 8080, service-name hosts) never activated; tests skipped
+(`-x test`); core services never queried directly.
+
 ## Rules for the next run
 
 1. Read this file, pick the first `todo` row, work only that chapter.
 2. Write `ChapterNN/FINDINGS/FINDINGS.md` the same day the chapter runs.
 3. Append one line to the commit log before declaring the chapter done.
-4. FIXTURE-FIRST: where the chapter targets third-party services, stand up a
+4. **Run the book's own test script if it has one, before writing any claim.**
+   `test-em-all.bash` exists for ch04 and settles routes, status codes and error
+   handling in one command. In this run it disproved a wrong conclusion I had
+   already written down. Probe the documented route first, then claim a gap.
+5. FIXTURE-FIRST: where the chapter targets third-party services, stand up a
    local replica under Docker Compose before running against it.
-5. If a chapter is partial, mark it `partial` and say what is unverified.
+6. If a chapter is partial, mark it `partial` and say what is unverified.
    Never mark `done` to clear the row.
