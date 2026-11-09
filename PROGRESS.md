@@ -56,8 +56,8 @@ Check `settings.gradle` before assuming.
 |----|-------|------|-------|----------|-------------|
 | 03 | Basic REST services (4 microservices, multi-module Gradle) | yes | done, build + run verified | Chapter03/FINDINGS/FINDINGS.md | b567f21 |
 | 04 | Composite service, aggregation + validation | yes | done, book's full suite passed | Chapter04/FINDINGS/FINDINGS.md | 4b509f3 |
-| 05 | Swagger/OpenAPI documentation of the API | yes | done, spec verified live | Chapter05/FINDINGS/FINDINGS.md | pending |
-| 06 | | yes | todo | | |
+| 05 | Swagger/OpenAPI documentation of the API | yes | done, spec verified live | Chapter05/FINDINGS/FINDINGS.md | e993cb2 |
+| 06 | Persistence (Mongo + MySQL), MapStruct, tests | yes | done, tests run + 20/20 suite | Chapter06/FINDINGS/FINDINGS.md | pending |
 | 07 | | yes | todo | | |
 | 09 | | yes | todo | | |
 | 10 | | yes | todo | | |
