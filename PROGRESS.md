@@ -50,6 +50,37 @@ Check `settings.gradle` before assuming.
   7000-7003 during the first Ch05 attempt, which made the composite fail to start
   and looked exactly like a code fault.
 
+### Never assume a container is up
+
+Every infrastructure failure in ch06 and ch07 was the same mistake: `docker run`
+output piped to `/dev/null`, so a container that never started looked exactly
+like one that did. `HibernateException: Access to DialectResolutionInfo cannot be
+null` is "MySQL unreachable", and a MySQL container that simply does not exist.
+Check invasively:
+
+```sh
+sudo docker inspect -f '{{.State.Status}}' <name>
+ss -ltn | grep <port>          # is the port actually published?
+sudo docker logs <name>        # e.g. "ready for connections"
+```
+
+### Old Docker images may be unpullable entirely
+
+2018-era images published with the v1 manifest schema are refused by containerd
+v2.1+: `media type application/vnd.docker.distribution.manifest.v1+prettyjws is
+no longer supported`. The book's `wurstmeister/kafka` and
+`wurstmeister/zookeeper` both hit this. Substitute a modern vendor's image of the
+same major version and **verify the broker with a real round trip** before
+trusting it.
+
+### Ch07+: a missing broker looks like a dead composite
+
+Ch07 puts both the Rabbit and Kafka binders on the classpath, so each core
+service's Actuator health includes a **rabbit** binder check. With no RabbitMQ,
+all three return `binders → rabbit → DOWN`, the composite's newly aggregating
+health goes DOWN, and the book's suite fails at step one with zero assertions.
+The symptom implicates the composite; the cause is a missing container.
+
 ## Chapters
 
 | Ch | Topic | Code | State | Evidence | Fork commit |
@@ -57,8 +88,8 @@ Check `settings.gradle` before assuming.
 | 03 | Basic REST services (4 microservices, multi-module Gradle) | yes | done, build + run verified | Chapter03/FINDINGS/FINDINGS.md | b567f21 |
 | 04 | Composite service, aggregation + validation | yes | done, book's full suite passed | Chapter04/FINDINGS/FINDINGS.md | 4b509f3 |
 | 05 | Swagger/OpenAPI documentation of the API | yes | done, spec verified live | Chapter05/FINDINGS/FINDINGS.md | e993cb2 |
-| 06 | Persistence (Mongo + MySQL), MapStruct, tests | yes | done, tests run + 20/20 suite | Chapter06/FINDINGS/FINDINGS.md | pending |
-| 07 | | yes | todo | | |
+| 06 | Persistence (Mongo + MySQL), MapStruct, tests | yes | done, tests run + 20/20 suite | Chapter06/FINDINGS/FINDINGS.md | de037d8 |
+| 07 | Events / async messaging (Spring Cloud Stream) | yes | done, suite + event flow passed | Chapter07/FINDINGS/FINDINGS.md | pending |
 | 09 | | yes | todo | | |
 | 10 | | yes | todo | | |
 | 11 | | yes | todo | | |
