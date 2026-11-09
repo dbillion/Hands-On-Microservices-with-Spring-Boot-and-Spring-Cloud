@@ -89,8 +89,8 @@ The symptom implicates the composite; the cause is a missing container.
 | 04 | Composite service, aggregation + validation | yes | done, book's full suite passed | Chapter04/FINDINGS/FINDINGS.md | 4b509f3 |
 | 05 | Swagger/OpenAPI documentation of the API | yes | done, spec verified live | Chapter05/FINDINGS/FINDINGS.md | e993cb2 |
 | 06 | Persistence (Mongo + MySQL), MapStruct, tests | yes | done, tests run + 20/20 suite | Chapter06/FINDINGS/FINDINGS.md | de037d8 |
-| 07 | Events / async messaging (Spring Cloud Stream) | yes | done, suite + event flow passed | Chapter07/FINDINGS/FINDINGS.md | pending |
-| 09 | | yes | todo | | |
+| 07 | Events / async messaging (Spring Cloud Stream) | yes | done, suite + event flow passed | Chapter07/FINDINGS/FINDINGS.md | a81e944 |
+| 09 | Service discovery with Netflix Eureka | yes | done, all four registered | Chapter09/FINDINGS/FINDINGS.md | pending |
 | 10 | | yes | todo | | |
 | 11 | | yes | todo | | |
 | 12 | | yes | todo | | |
