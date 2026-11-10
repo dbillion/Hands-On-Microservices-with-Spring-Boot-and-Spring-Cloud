@@ -93,7 +93,7 @@ The symptom implicates the composite; the cause is a missing container.
 | 09 | Service discovery with Netflix Eureka | yes | done, all four registered | Chapter09/FINDINGS/FINDINGS.md | 96a570b |
 | 10 | Spring Cloud Gateway over Eureka discovery | yes | done, 24/24 + gateway 200s | Chapter10/FINDINGS/FINDINGS.md | 758586d |
 | 11 | Security: Spring Security + OAuth2 resource server | yes | done, 27/27 incl 401/200/403 | Chapter11/FINDINGS/FINDINGS.md | 476aa5e |
-| 12 | | yes | todo | | |
+| 12 | Centralised configuration (Spring Cloud Config) | yes | partial: config server runs, clients 401 on {cipher} creds | Chapter12/FINDINGS/FINDINGS.md | pending |
 | 13 | | yes | todo | | |
 | 14 | | yes | todo | | |
 | 15 | | yes | todo | | |
