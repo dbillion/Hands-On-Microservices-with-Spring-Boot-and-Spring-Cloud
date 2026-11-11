@@ -97,7 +97,7 @@ The symptom implicates the composite; the cause is a missing container.
 | 13 | Resilience: Resilience4j circuit breaker and retry | yes | done, book suite 51/51 incl full CLOSED->OPEN->HALF_OPEN->CLOSED breaker test | Chapter13/FINDINGS/FINDINGS.md | 9a432bc |
 | 14 | Distributed tracing: Sleuth + Zipkin over RabbitMQ | yes | done, book suite 51/51 + Zipkin shows 29 multi-service traces with 25 correlated client/server span ids | Chapter14/FINDINGS/FINDINGS.md | 3e7ec37 |
 | 15 | Running the landscape on Kubernetes | yes | done, minikube v1.37.0 + book own nginx manifests: deploy 1/1, EndpointSlice populated, host NodePort 30080 -> 200 Welcome to nginx | Chapter15/FINDINGS/FINDINGS.md | a790a19 |
-| 16 | Kubernetes primitives for service discovery | partial | disk freed to 6.7GB; config-server 401 root-caused (Spring-native secret names), /decrypt proves ENCRYPT_KEY; mysql/mongo/rabbit/zipkin/auth-server 1/1 but 5 microservices CrashLoopBackOff, no end-to-end | Chapter16/FINDINGS/FINDINGS.md | 38a1469 |
+| 16 | Kubernetes primitives for service discovery | yes | done, 11/11 pods 1/1; gateway issues 594-char JWT; composite answers with the book own 404 (empty unseeded Mongo, not a routing fault); book 350Mi limit was an OOMKill, needs 900Mi | Chapter16/FINDINGS/FINDINGS.md | f7cac30 |
 | 17 | | yes | todo | | |
 | 18 | | yes | todo | | |
 | 19 | | yes | todo | | |
