@@ -1,0 +1,49 @@
+===== 1. READY STATE (1/1 means readiness passed) =====
+NAME                                 READY   STATUS             RESTARTS        AGE     IP             NODE       NOMINATED NODE   READINESS GATES
+auth-server-674f85f5f5-xc49w         1/1     Running            1 (110s ago)    3m13s   10.244.0.100   minikube   <none>           <none>
+config-server-7765dbf766-n7452       1/1     Running            0               6m21s   10.244.0.99    minikube   <none>           <none>
+gateway-5b7f4d79f8-7wgq5             0/1     CrashLoopBackOff   2 (11s ago)     3m13s   10.244.0.101   minikube   <none>           <none>
+mongodb-868c84564-z54sp              1/1     Running            0               3m13s   10.244.0.102   minikube   <none>           <none>
+mysql-6796566749-6f75z               1/1     Running            0               3m13s   10.244.0.106   minikube   <none>           <none>
+product-684bc94c4b-qn92z             0/1     Running            3 (39s ago)     3m13s   10.244.0.105   minikube   <none>           <none>
+product-composite-7dcf8cf65d-lx5r5   0/1     CrashLoopBackOff   2 (18s ago)     3m13s   10.244.0.104   minikube   <none>           <none>
+rabbitmq-7c5c5cc564-fzwg6            1/1     Running            0               3m13s   10.244.0.103   minikube   <none>           <none>
+recommendation-76cf86c47-mj5hf       0/1     Running            3 (31s ago)     3m13s   10.244.0.107   minikube   <none>           <none>
+review-7db6b88d86-rssgg              0/1     CrashLoopBackOff   2 (19s ago)     3m13s   10.244.0.108   minikube   <none>           <none>
+zipkin-server-58bcc5cc9c-mhsdw       1/1     Running            1 (2m25s ago)   3m13s   10.244.0.109   minikube   <none>           <none>
+
+  --- any pod still not-ready, with the reason ---
+    gateway-5b7f4d79f8-7wgq5: ready=False CrashLoopBackOff
+    product-684bc94c4b-qn92z: ready=False (running, probe failing)
+    product-composite-7dcf8cf65d-lx5r5: ready=False CrashLoopBackOff
+    recommendation-76cf86c47-mj5hf: ready=False (running, probe failing)
+    review-7db6b88d86-rssgg: ready=False CrashLoopBackOff
+
+===== 2. END-TO-END: composite through its k8s Service name =====
+pod/curl-probe created
+  gateway_health=000
+  composite_product1=000
+  --- body ---
+
+===== 3. DID THEY FIND EACH OTHER WITHOUT EUREKA? =====
+
+===== 4. EVIDENCE THE COMPOSITE SERVED REAL AGGREGATED DATA =====
+
+===== 5. ENDPOINTS (Services carry addresses, not Eureka) =====
+SVC                 ADDR
+auth-server         <none>
+config-server       <none>
+gateway             <none>
+kubernetes          <none>
+mongodb             <none>
+mysql               <none>
+nginx-service       <none>
+product-composite   <none>
+product             <none>
+rabbitmq            <none>
+recommendation      <none>
+review              <none>
+
+===== 6. DISK / MEM =====
+  disk 6.7G avail, 78% used
+  mem 10GB avail

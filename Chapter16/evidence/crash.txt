@@ -1,0 +1,43 @@
+===== gateway  (gateway-5b7f4d79f8-7wgq5) =====
+  2026-11-11 07:47:39.081  INFO [gateway,,,] 1 --- [           main] faultConfiguringBeanFactoryPostProcessor : No bean named 'errorChannel' has been explicitly defined. Therefore, a default PublishSubscribeChannel will be created.
+  2026-11-11 07:47:43.875  INFO [gateway,,,] 1 --- [           main] o.s.i.endpoint.EventDrivenConsumer       : Adding {logging-channel-adapter:_org.springframework.integration.errorLogger} as a subscriber to the 'errorChannel' channel
+  2026-11-11 07:47:43.876  INFO [gateway,,,] 1 --- [           main] o.s.i.channel.PublishSubscribeChannel    : Channel 'gateway-1.errorChannel' has 1 subscriber(s).
+  2026-11-11 07:47:43.876  INFO [gateway,,,] 1 --- [           main] o.s.i.endpoint.EventDrivenConsumer       : started bean '_org.springframework.integration.errorLogger'
+  2026-11-11 07:47:44.092  INFO [gateway,,,] 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 8443
+  2026-11-11 07:47:44.239  INFO [gateway,,,] 1 --- [           main] s.m.s.gateway.GatewayApplication         : Started GatewayApplication in 8.82 seconds (JVM running for 9.456)
+  --- last 6 lines ---
+    2026-11-11 07:47:43.139  INFO [gateway,,,] 1 --- [           main] o.s.c.f.c.c.SimpleFunctionRegistry       : Looking up function '' with acceptedOutputTypes: []
+    2026-11-11 07:47:43.875  INFO [gateway,,,] 1 --- [           main] o.s.i.endpoint.EventDrivenConsumer       : Adding {logging-channel-adapter:_org.springframework.integration.errorLogger} as a subscriber to the 'errorChannel' channel
+    2026-11-11 07:47:43.876  INFO [gateway,,,] 1 --- [           main] o.s.i.channel.PublishSubscribeChannel    : Channel 'gateway-1.errorChannel' has 1 subscriber(s).
+    2026-11-11 07:47:43.876  INFO [gateway,,,] 1 --- [           main] o.s.i.endpoint.EventDrivenConsumer       : started bean '_org.springframework.integration.errorLogger'
+    2026-11-11 07:47:44.092  INFO [gateway,,,] 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 8443
+    2026-11-11 07:47:44.239  INFO [gateway,,,] 1 --- [           main] s.m.s.gateway.GatewayApplication         : Started GatewayApplication in 8.82 seconds (JVM running for 9.456)
+
+===== product-composite  (product-composite-7dcf8cf65d-lx5r5) =====
+  2026-11-11 07:47:27.017  INFO [product-composite,,,] 1 --- [           main] faultConfiguringBeanFactoryPostProcessor : No bean named 'errorChannel' has been explicitly defined. Therefore, a default PublishSubscribeChannel will be created.
+  --- last 6 lines ---
+    2026-11-11 07:47:27.050  INFO [product-composite,,,] 1 --- [           main] faultConfiguringBeanFactoryPostProcessor : No bean named 'integrationHeaderChannelRegistry' has been explicitly defined. Therefore, a default DefaultHeaderChannelRegistry will be created.
+    2026-11-11 07:47:27.909  INFO [product-composite,,,] 1 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean 'integrationChannelResolver' of type [org.springframework.integration.support.channel.BeanFactoryChannelResolver] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+    2026-11-11 07:47:27.921  INFO [product-composite,,,] 1 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean 'integrationDisposableAutoCreatedBeans' of type [org.springframework.integration.config.annotation.Disposables] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+    2026-11-11 07:47:28.064  INFO [product-composite,,,] 1 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.integration.config.IntegrationManagementConfiguration' of type [org.springframework.integration.config.IntegrationManagementConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+    2026-11-11 07:47:32.189  INFO [product-composite,,,] 1 --- [           main] o.s.s.c.ThreadPoolTaskScheduler          : Initializing ExecutorService 'taskScheduler'
+    2026-11-11 07:47:32.300  INFO [product-composite,,,] 1 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 28 endpoint(s) beneath base path '/actuator'
+
+===== review  (review-7db6b88d86-rssgg) =====
+  2026-11-11 07:47:20.190  INFO [review,,,] 1 --- [           main] faultConfiguringBeanFactoryPostProcessor : No bean named 'errorChannel' has been explicitly defined. Therefore, a default PublishSubscribeChannel will be created.
+  --- last 6 lines ---
+    2026-11-11 07:47:22.840  INFO [review,,,] 1 --- [         task-1] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.4.18.Final
+    2026-11-11 07:47:23.519  INFO [review,,,] 1 --- [         task-1] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.0.Final}
+    2026-11-11 07:47:23.930  INFO [review,,,] 1 --- [         task-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+    2026-11-11 07:47:25.247  INFO [review,,,] 1 --- [         task-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+    2026-11-11 07:47:25.470  INFO [review,,,] 1 --- [         task-1] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.MySQL57Dialect
+    2026-11-11 07:47:27.917  INFO [review,,,] 1 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 18 endpoint(s) beneath base path '/actuator'
+
+===== product (running, probe failing): what does its health say? =====
+  error: unable to upgrade connection: container not found ("pro")
+
+===== what port is product actually bound to? =====
+  error: unable to upgrade connection: container not found ("pro")
+
+===== DISK =====
+  6.7G avail

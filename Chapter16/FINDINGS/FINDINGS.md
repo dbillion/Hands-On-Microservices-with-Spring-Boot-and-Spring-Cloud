@@ -13,20 +13,21 @@ of registry lookup. The chapter also keeps the ch12 configuration sourcing
 `config-client-credentials` as a Secret so the config-server credentials do not
 live in a manifest.
 
-## Verdict: PARTIAL — five real defects fixed; still not end-to-end
+## Verdict: PARTIAL — disk reclaimed, config-server 401 root-caused and fixed, 6 pods Ready; 5 microservices still crash-loop
+
+The blocker was not the code — it was two things in sequence: the codespace disk
+had filled to 100 %, and then a credential-name defect that only became visible
+once there was room to run.
 
 | Layer reached | State | Evidence |
 |---|---|---|
-| Cluster | Ready | minikube v1.37.0 on containerd |
-| 7 Spring images | Built | all in containerd, `:v1` and `:latest` |
-| Tags | Fixed | manifests reference images untagged → `:latest` |
-| Secret `config-client-credentials` | Fixed | pods advanced past `CreateContainerConfigError` |
-| Image name `auth-server` | Fixed | manifests say `auth-server`, the build dir says `authorization-server` |
-| ConfigMap `config-repo` | Fixed | mounts the chapter's 7 real files (1133–3998 bytes each) |
-| Secret `config-server-secrets` | Fixed | pods advanced past `FailedMount` |
-| **config-server** | **Ready** | `1/1 Running`, serving `/config-repo/application.yml` |
-| Stateful deps | Ready | mysql, mongodb, rabbitmq, zipkin `1/1 Running` |
-| **7 microservices** | **NOT READY** | Running but looping on config fetch; probe gets connection refused on port 80 |
+| Disk | **Freed** | 279 MB → **6.7 GB** avail, 100 % → 78 % used, cluster survived intact |
+| config-server serves real config | **Verified** | `/product/default` returns `file:/config-repo/product.yml (document #0)`; `/product/docker` returns the docker profile |
+| `ENCRYPT_KEY` works | **Verified** | `POST /decrypt` of the stored cipher returns **`guest`** |
+| config-server accepts clients | **Verified** | `dev-usr:dev-pwd` now returns 200 |
+| Stateful deps + edge | **Ready** | mysql, mongodb, rabbitmq, zipkin-server, **auth-server** all `1/1` |
+| **Microservices** | **crash-looping** | gateway, product, product-composite, recommendation, review `CrashLoopBackOff` |
+| **End-to-end request** | **NOT reached** | every in-cluster call returns `HTTP 000` |
 
 ## Environment actually used
 
@@ -137,7 +138,59 @@ Two of these were my own faults of *reading*, and both are cheap but expensive:
   (only `--all`, `--build-env`, `-f`, `-n`, `--push`, `-t`). My first build used
   no `-q` and worked; the batch run added `-q` and all six failed silently.
 
-## Where it stopped — a capacity limit, not a defect
+## The 401: a credential-name defect, and the book's own answer
+
+With disk freed, the microservices' real failure surfaced as
+`HttpClientErrorException$Unauthorized: 401` inside
+`ConfigServicePropertySourceLocator.getRemoteEnvironment`.
+
+**Root cause.** config-server's `SecurityConfig` extends
+`WebSecurityConfigurerAdapter` and calls `.anyRequest().authenticated()` but
+overrides **no `configure(AuthenticationManagerBuilder)`** — so it has no user
+store at all and falls back to Spring Boot's *generated* password. The clients
+correctly send `dev-usr`/`dev-pwd`, but the server is running with a random one
+and answers 401 forever. My Secret had set `CONFIG_SERVER_USR`/`CONFIG_SERVER_PWD`
+— names config-server never reads.
+
+**The book's own `docker-compose.yml` is authoritative for the names.** It gives
+config-server exactly:
+
+```yaml
+environment:
+  - ENCRYPT_KEY=${CONFIG_SERVER_ENCRYPT_KEY}
+  - SPRING_SECURITY_USER_NAME=${CONFIG_SERVER_USR}
+  - SPRING_SECURITY_USER_PASSWORD=${CONFIG_SERVER_PWD}
+```
+
+Recreating `config-server-secrets` with those three Spring-native names verified
+on all three routes at once: `/product/default` 200 with the real property source,
+`/product/docker` 200 on the docker profile, and `POST /decrypt` returning
+**`guest`** — the last one being the proof that `ENCRYPT_KEY` is correct, since
+config-repo stores the RabbitMQ and keystore passwords as `{cipher}` hex and the
+skill's rule is to confirm the wire value decrypts before calling the crypto
+working.
+
+The general rule this proves: **the env var name a framework reads is not the
+name a compose file maps from** — `.env` holds `CONFIG_SERVER_USR`, compose
+translates it to `SPRING_SECURITY_USER_NAME`, and only the second is read.
+
+## What the disk reclaim bought
+
+The user's instruction — clear the containers to free space — was the change that
+unblocked everything above. `docker system df` showed the mass was not where I
+had been scraping:
+
+```
+BEFORE  279 MB avail, 100% used
+  + builder prune -a -f        31 build-cache entries, 0 active ....... +1.7 GB
+  + docker volume prune -f     31 local volumes, 1 active ............ +3.6 GB
+  + docker image prune -a -f    5 unused images ....................... +1.9 GB
+AFTER  6.7 GB avail, 78% used — and minikube Ready throughout
+```
+
+Seven GB was sitting in build cache and orphaned volumes, of which I had been
+aware but had estimated as marginal. `docker system df` is the command that
+shows it; I had been using `df` and `du`, which do not.
 
 Measured, not estimated:
 

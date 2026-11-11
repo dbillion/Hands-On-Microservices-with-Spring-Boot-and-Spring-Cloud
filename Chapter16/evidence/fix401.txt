@@ -1,0 +1,44 @@
+===== 0. THE BOOK'S OWN ANSWER (compose env for config-server) =====
+        - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+      environment:
+  .env: CONFIG_SERVER_ENCRYPT_KEY=my-very-secure-encrypt-key CONFIG_SERVER_USR=dev-usr CONFIG_SERVER_PWD=dev-pwd 
+
+===== 1. RECREATE THE SECRET WITH THE SPRING-NATIVE NAMES =====
+  secret/config-server-secrets created
+  secret present
+
+===== 2. RESTART config-server so it picks up the new env =====
+  config-server: Running restarts=0
+
+===== 3. DOES config-server NOW ACCEPT dev-usr/dev-pwd? =====
+  /actuator/health (no creds):
+    HTTP=200
+  /product/default with dev-usr:dev-pwd (first 180 chars):
+{"name":"product","profiles":["default"],"label":null,"version":null,"state":null,"propertySources":[{"name":"file:/config-repo/product.yml (document #0)","source":{"server.port":7
+  /product/docker with dev-usr:dev-pwd (first 180 chars):
+{"name":"product","profiles":["docker"],"label":null,"version":null,"state":null,"propertySources":[{"name":"file:/config-repo/product.yml (document #1)","source":{"spring.profiles
+  /decrypt of the stored cipher (the ENCRYPT_KEY test):
+guest
+
+===== 4. THE MICROSERVICES: still 401? =====
+  auth-server-674f85f5f5-g66tm CrashLoopBackOff restarts=10
+  config-server-7765dbf766-n7452 Running restarts=0
+  gateway-5b7f4d79f8-g4q2l CrashLoopBackOff restarts=10
+  mongodb-868c84564-xcdm9 Running restarts=0
+  mysql-6796566749-j5dcw Running restarts=0
+  product-684bc94c4b-vwzx9 CrashLoopBackOff restarts=10
+  product-composite-7dcf8cf65d-q2ttk Running restarts=11
+  rabbitmq-7c5c5cc564-7gbrg Running restarts=0
+  recommendation-76cf86c47-gfd5f CrashLoopBackOff restarts=11
+  review-7db6b88d86-n5mjd CrashLoopBackOff restarts=11
+  zipkin-server-58bcc5cc9c-zvxks CrashLoopBackOff restarts=7
+
+  --- product pod log (Started / 401 / ERROR) ---
+    Caused by: org.springframework.web.client.HttpClientErrorException$Unauthorized: 401 : [no body]
+    	at org.springframework.web.client.HttpClientErrorException.create(HttpClientErrorException.java:105) ~[spring-web-5.2.8.RELEASE.jar!/:5.2.8.RELEASE]
+    	at org.springframework.web.client.DefaultResponseErrorHandler.handleError(DefaultResponseErrorHandler.java:184) ~[spring-web-5.2.8.RELEASE.jar!/:5.2.8.RELEASE]
+    	at org.springframework.web.client.DefaultResponseErrorHandler.handleError(DefaultResponseErrorHandler.java:125) ~[spring-web-5.2.8.RELEASE.jar!/:5.2.8.RELEASE]
+    	at org.springframework.web.client.ResponseErrorHandler.handleError(ResponseErrorHandler.java:63) ~[spring-web-5.2.8.RELEASE.jar!/:5.2.8.RELEASE]
+
+===== 5. DISK =====
+  6.7G avail, 78% used

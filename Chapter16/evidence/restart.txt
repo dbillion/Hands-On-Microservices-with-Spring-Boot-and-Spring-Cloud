@@ -1,0 +1,36 @@
+===== 0. WHAT DO THE CLIENTS SEND? (their own env + bootstrap.yml) =====
+  --- product.yml manifest env ---
+  20:        - name: SPRING_PROFILES_ACTIVE
+  21:          value: "docker"
+  23:        - secretRef:
+  --- product bootstrap.yml: how CONFIG_SERVER_USR/PWD map ---
+  12:    uri: http://${CONFIG_SERVER_USR}:${CONFIG_SERVER_PWD}@${app.config-server}:8888
+  13-
+  14----
+  15-spring.profiles: docker
+
+===== 1. RECREATE EVERY MICROSERVICE POD (stale env from before the fix) =====
+  disk: 6.7G avail
+  auth-server-674f85f5f5-xc49w Running restarts=1
+  config-server-7765dbf766-n7452 Running restarts=0
+  gateway-5b7f4d79f8-7wgq5 Running restarts=1
+  mongodb-868c84564-z54sp Running restarts=0
+  mysql-6796566749-6f75z Running restarts=0
+  product-684bc94c4b-qn92z Running restarts=1
+  product-composite-7dcf8cf65d-lx5r5 Running restarts=1
+  rabbitmq-7c5c5cc564-fzwg6 Running restarts=0
+  recommendation-76cf86c47-mj5hf Running restarts=1
+  review-7db6b88d86-rssgg Running restarts=1
+  zipkin-server-58bcc5cc9c-mhsdw Running restarts=1
+
+===== 2. THE FIRST LOG LINES OF A FRESH product POD =====
+  pod: product-684bc94c4b-qn92z
+  2026-11-11 07:44:14.924  INFO [product,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+  2026-11-11 07:44:25.343  INFO [product,,,] 1 --- [           main] faultConfiguringBeanFactoryPostProcessor : No bean named 'errorChannel' has been explicitly defined. Therefore, a default PublishSubscribeChannel will be created.
+
+===== 3. THE COMPOSITE'S LOG: did it resolve product/review/recommendation by k8s name? =====
+  2026-11-11 07:44:17.828  INFO [product-composite,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+
+===== 4. DISK =====
+  6.7G avail, 78% used
+  mem 10GB avail of 15GB

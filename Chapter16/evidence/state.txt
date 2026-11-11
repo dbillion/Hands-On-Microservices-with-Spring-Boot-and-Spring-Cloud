@@ -1,0 +1,53 @@
+===== CURRENT POD STATE =====
+NAME                                 READY   STATUS             RESTARTS        AGE     IP             NODE       NOMINATED NODE   READINESS GATES
+auth-server-674f85f5f5-xc49w         1/1     Running            1 (5m56s ago)   7m19s   10.244.0.100   minikube   <none>           <none>
+config-server-7765dbf766-n7452       1/1     Running            0               10m     10.244.0.99    minikube   <none>           <none>
+gateway-5b7f4d79f8-7wgq5             0/1     CrashLoopBackOff   5 (38s ago)     7m19s   10.244.0.101   minikube   <none>           <none>
+mongodb-868c84564-z54sp              1/1     Running            0               7m19s   10.244.0.102   minikube   <none>           <none>
+mysql-6796566749-6f75z               1/1     Running            0               7m19s   10.244.0.106   minikube   <none>           <none>
+product-684bc94c4b-qn92z             0/1     CrashLoopBackOff   5 (96s ago)     7m19s   10.244.0.105   minikube   <none>           <none>
+product-composite-7dcf8cf65d-lx5r5   0/1     CrashLoopBackOff   5 (47s ago)     7m19s   10.244.0.104   minikube   <none>           <none>
+rabbitmq-7c5c5cc564-fzwg6            1/1     Running            0               7m19s   10.244.0.103   minikube   <none>           <none>
+recommendation-76cf86c47-mj5hf       0/1     CrashLoopBackOff   5 (79s ago)     7m19s   10.244.0.107   minikube   <none>           <none>
+review-7db6b88d86-rssgg              0/1     CrashLoopBackOff   5 (63s ago)     7m19s   10.244.0.108   minikube   <none>           <none>
+zipkin-server-58bcc5cc9c-mhsdw       1/1     Running            2 (88s ago)     7m19s   10.244.0.109   minikube   <none>           <none>
+
+  --- not-ready reasons ---
+    gateway-5b7f4d79f8-7wgq5: ready=False CrashLoopBackOff
+    product-684bc94c4b-qn92z: ready=False CrashLoopBackOff
+    product-composite-7dcf8cf65d-lx5r5: ready=False CrashLoopBackOff
+    recommendation-76cf86c47-mj5hf: ready=False CrashLoopBackOff
+    review-7db6b88d86-rssgg: ready=False CrashLoopBackOff
+
+===== THE GATEWAY: does HTTPS 8443 actually answer? =====
+  pod: gateway-5b7f4d79f8-7wgq5
+  Events:
+    Type     Reason     Age                     From               Message
+    ----     ------     ----                    ----               -------
+    Normal   Scheduled  7m19s                   default-scheduler  Successfully assigned default/gateway-5b7f4d79f8-7wgq5 to minikube
+    Warning  Unhealthy  6m3s                    kubelet            spec.containers{gateway}: Readiness probe failed: Get "https://10.244.0.101:8443/actuator/info": net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)
+    Warning  Unhealthy  6m3s                    kubelet            spec.containers{gateway}: Readiness probe failed: Get "https://10.244.0.101:8443/actuator/info": read tcp 10.244.0.1:45512->10.244.0.101:8443: read: connection reset by peer
+    Warning  Unhealthy  5m21s (x10 over 7m5s)   kubelet            spec.containers{gateway}: Readiness probe failed: Get "https://10.244.0.101:8443/actuator/info": dial tcp 10.244.0.101:8443: connect: connection refused
+
+===== GATEWAY'S OWN LAST LOG LINES (the moment it died) =====
+  2026-11-11 07:49:19.673  INFO [gateway,,,] 1 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Method]
+  2026-11-11 07:49:19.673  INFO [gateway,,,] 1 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Path]
+  2026-11-11 07:49:19.673  INFO [gateway,,,] 1 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Query]
+  2026-11-11 07:49:19.673  INFO [gateway,,,] 1 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [ReadBodyPredicateFactory]
+  2026-11-11 07:49:19.673  INFO [gateway,,,] 1 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [RemoteAddr]
+  2026-11-11 07:49:19.674  INFO [gateway,,,] 1 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [Weight]
+  2026-11-11 07:49:19.674  INFO [gateway,,,] 1 --- [           main] o.s.c.g.r.RouteDefinitionRouteLocator    : Loaded RoutePredicateFactory [CloudFoundryRouteService]
+  2026-11-11 07:49:20.705  INFO [gateway,,,] 1 --- [           main] o.s.s.c.ThreadPoolTaskScheduler          : Initializing ExecutorService 'taskScheduler'
+  2026-11-11 07:49:20.777  INFO [gateway,,,] 1 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 19 endpoint(s) beneath base path '/actuator'
+  2026-11-11 07:49:20.884 DEBUG [gateway,,,] 1 --- [           main] o.s.w.s.adapter.HttpWebHandlerAdapter    : enableLoggingRequestDetails='false': form data and headers will be masked to prevent unsafe logging of potentially sensitive data
+  2026-11-11 07:49:21.004  INFO [gateway,,,] 1 --- [           main] o.s.c.f.c.c.SimpleFunctionRegistry       : Looking up function '' with acceptedOutputTypes: []
+  2026-11-11 07:49:21.763  INFO [gateway,,,] 1 --- [           main] o.s.i.endpoint.EventDrivenConsumer       : Adding {logging-channel-adapter:_org.springframework.integration.errorLogger} as a subscriber to the 'errorChannel' channel
+  2026-11-11 07:49:21.764  INFO [gateway,,,] 1 --- [           main] o.s.i.channel.PublishSubscribeChannel    : Channel 'gateway-1.errorChannel' has 1 subscriber(s).
+  2026-11-11 07:49:21.764  INFO [gateway,,,] 1 --- [           main] o.s.i.endpoint.EventDrivenConsumer       : started bean '_org.springframework.integration.errorLogger'
+  2026-11-11 07:49:21.948  INFO [gateway,,,] 1 --- [           main] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port(s): 8443
+  2026-11-11 07:49:22.118  INFO [gateway,,,] 1 --- [           main] s.m.s.gateway.GatewayApplication         : Started GatewayApplication in 14.085 seconds (JVM running for 15.279)
+  2026-11-11 07:49:26.119 TRACE [gateway,,,] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [53b94369-1] HTTP GET "/actuator/info", headers={masked}
+  2026-11-11 07:49:26.215 TRACE [gateway,b6b7d088e77345de,b6b7d088e77345de,false] 1 --- [oundedElastic-1] o.s.c.g.f.WeightCalculatorWebFilter      : Weights attr: {}
+
+===== DISK =====
+  6.7G avail, 78% used
