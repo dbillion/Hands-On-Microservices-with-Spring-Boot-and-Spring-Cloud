@@ -1,0 +1,124 @@
+===== 0. INFRA + ZIPKIN =====
+  containers: ch7kafka ch7rabbit ch7zk ch6mysql ch6mongo 
+  ports: 5672=2 9092=2
+  starting Zipkin (RabbitMQ span collector, in-memory storage)
+  zipkin container: running  9411: 1
+  zipkin health: {"status":"UP","zipkin":{"status":"UP","details":{"InMemoryStorage":{"status":"UP"},"RabbitMQCollector":{"status":"UP"}}}}
+
+===== 1. FREE EVERY PORT THE STACK OWNS =====
+  ports still bound: 0
+
+===== 2. BUILD =====
+  wrapper: gradle-5.6.4-bin.zip  java: openjdk version "11.0.25" 2024-10-15 LTS
+BUILD SUCCESSFUL in 2m 3s
+49 actionable tasks: 49 executed
+
+===== 3. CH14's TRACING CONFIG (read from source, not assumed) =====
+    spring.zipkin.sender.type: rabbit
+    spring.sleuth.sampler.probability: 1.0
+    spring.zipkin.sender.type: kafka
+  deps in composite: 2
+  modules carrying sleuth+zipkin: 7
+
+===== 4. START: config server, eureka, auth, gateway, 4 services =====
+  config-server Started: 1
+  product-service Started: 1
+  review-service Started: 1
+  recommendation-service Started: 1
+  product-composite-service Started: 1
+  eureka: "name":"AUTH-SERVER" "name":"GATEWAY" "name":"PRODUCT" "name":"PRODUCT-COMPOSITE" "name":"RECOMMENDATION" "name":"REVIEW" 
+  services reporting sleuth/browser: 0/4 composite mentions: 0
+
+===== 5. EXERCISE A COMPOSITE CALL AND SEE IF IT LANDS IN ZIPKIN =====
+    token: acquired
+  response headers from a composite call (look for Trace-Id):
+  zipkin trace count BEFORE the call: 1
+  making the call with the book's delay so it takes real work:
+    composite/?delay=1 -> HTTP=200
+  zipkin traces AFTER: 5
+  services appearing in the newest trace:
+    eureka-server  span=get
+  distinct service names in that one trace:
+eureka-server
+  trace ids present: f5c4ac75e2b83e94 
+
+===== 6. THE BOOK'S OWN SUITE (does not cover tracing) =====
+  assertions OK: 51
+  failures: 0
+    End, all tests OK: Wed Nov 11 06:00:01 UTC 2026
+
+===== 7. TRACE CORRELATION ACROSS SERVICES (the chapter's real claim) =====
+  One trace, spans by service (a single request must traverse the composite
+  and its three dependencies):
+    eureka-server: 1 span(s)
+  total spans in newest trace: 1
+===== SUITE =====
+Start Tests: Wed Nov 11 05:59:40 UTC 2026
+HOST=localhost
+PORT=8443
+Wait for: curl -k https://localhost:8443/actuator/health... DONE, continues...
+Test OK (HTTP Code: 200)
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   320    0     0  100   320      0   2662 --:--:-- --:--:-- --:--:--  2666
+Test OK (HTTP Code: 200)
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   313    0     0  100   313      0   3345 --:--:-- --:--:-- --:--:--  3365
+Test OK (HTTP Code: 200)
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   609    0     0  100   609      0   6943 --:--:-- --:--:-- --:--:--  7000
+Wait for messages to be processed... 
+Test OK (HTTP Code: 200)
+Test OK (actual value: 2)
+Test OK (actual value: 3)
+Test OK (actual value: 3)
+All messages are now processed!
+Test OK (HTTP Code: 200)
+Test OK (actual value: 2)
+Test OK (actual value: 3)
+Test OK (actual value: 3)
+Test OK (HTTP Code: 404, {"timestamp":"2026-11-11T05:59:43.951402Z","path":"/product-composite/13","message":"Product Id: 13 not found in fallback cache!","status":404,"error":"Not Found"})
+Test OK (HTTP Code: 200)
+Test OK (actual value: 114)
+Test OK (actual value: 0)
+Test OK (actual value: 3)
+Test OK (HTTP Code: 200)
+Test OK (actual value: 214)
+Test OK (actual value: 3)
+Test OK (actual value: 0)
+Test OK (HTTP Code: 422, {"timestamp":"2026-11-11T05:59:44.224568Z","path":"/product-composite/-1","message":"Invalid productId: -1","status":422,"error":"Unprocessable Entity"})
+Test OK (actual value: "Invalid productId: -1")
+Test OK (HTTP Code: 400, {"timestamp":"2026-11-11T05:59:44.281+00:00","path":"/product-composite/invalidProductId","status":400,"error":"Bad Request","message":"Type mismatch.","requestId":"47c34935-16"})
+Test OK (actual value: "Type mismatch.")
+Test OK (HTTP Code: 401, )
+Test OK (HTTP Code: 200)
+Test OK (HTTP Code: 403, )
+Start Circuit Breaker tests!
+Test OK (actual value: CLOSED)
+Test OK (HTTP Code: 500, {"timestamp":"2026-11-11T05:59:46.622+00:00","path":"/product-composite/2","status":500,"error":"Internal Server Error","message":"Did not observe any item or terminal signal within 2000ms in 'onErrorResume' (and no fallback has been configured)","requestId":"47c34935-20"})
+Test OK (actual value: Did not observe any item or terminal signal within 2000ms)
+Test OK (HTTP Code: 500, {"timestamp":"2026-11-11T05:59:48.676+00:00","path":"/product-composite/2","status":500,"error":"Internal Server Error","message":"Did not observe any item or terminal signal within 2000ms in 'onErrorResume' (and no fallback has been configured)","requestId":"47c34935-21"})
+Test OK (actual value: Did not observe any item or terminal signal within 2000ms)
+Test OK (HTTP Code: 500, {"timestamp":"2026-11-11T05:59:50.739+00:00","path":"/product-composite/2","status":500,"error":"Internal Server Error","message":"Did not observe any item or terminal signal within 2000ms in 'onErrorResume' (and no fallback has been configured)","requestId":"47c34935-22"})
+Test OK (actual value: Did not observe any item or terminal signal within 2000ms)
+Test OK (HTTP Code: 200)
+Test OK (actual value: Fallback product2)
+Test OK (HTTP Code: 200)
+Test OK (actual value: Fallback product2)
+Test OK (HTTP Code: 404, {"timestamp":"2026-11-11T05:59:50.945372Z","path":"/product-composite/13","message":"Product Id: 13 not found in fallback cache!","status":404,"error":"Not Found"})
+Test OK (actual value: Product Id: 13 not found in fallback cache!)
+Will sleep for 10 sec waiting for the CB to go Half Open...
+Test OK (actual value: HALF_OPEN)
+Test OK (HTTP Code: 200)
+Test OK (actual value: product name C)
+Test OK (HTTP Code: 200)
+Test OK (actual value: product name C)
+Test OK (HTTP Code: 200)
+Test OK (actual value: product name C)
+Test OK (actual value: CLOSED)
+Test OK (actual value: CLOSED_TO_OPEN)
+Test OK (actual value: OPEN_TO_HALF_OPEN)
+Test OK (actual value: HALF_OPEN_TO_CLOSED)
+End, all tests OK: Wed Nov 11 06:00:01 UTC 2026

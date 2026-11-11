@@ -1,0 +1,52 @@
+traces fetched (serviceName=product-composite): 35
+of those, spanning more than one service:      29
+
+spans by service:
+    product-composite: 124
+    gateway: 87
+    review: 29
+    recommendation: 29
+    product: 21
+
+client -> server span-id sharing, per multi-service trace:
+    OK   product-composite CLIENT 720e0131 -> recommendation SERVER 720e0131
+    OK   product-composite CLIENT c64e3473 -> recommendation SERVER c64e3473
+    OK   product-composite CLIENT 59c69aff -> review SERVER 59c69aff
+    OK   product-composite CLIENT a826dbef -> recommendation SERVER a826dbef
+    OK   product-composite CLIENT 1946fd8e -> review SERVER 1946fd8e
+    OK   product-composite CLIENT d3d5142c -> recommendation SERVER d3d5142c
+    OK   product-composite CLIENT 1b39391c -> review SERVER 1b39391c
+    OK   product-composite CLIENT 4488f515 -> review SERVER 4488f515
+    OK   product-composite CLIENT 66b7ce85 -> recommendation SERVER 66b7ce85
+    OK   product-composite CLIENT 6cfcfcfb -> recommendation SERVER 6cfcfcfb
+    OK   product-composite CLIENT 400d515f -> recommendation SERVER 400d515f
+    OK   product-composite CLIENT a58a0773 -> recommendation SERVER a58a0773
+    total: 25 client spans whose server-side counterpart shares the same span id
+           91 client spans with no server span of the same id
+
+largest multi-service trace:
+    traceId: d01ac1ff96d6cdb4
+    spans:   18
+    services:, gateway, product, product-composite, recommendation, review
+    gateway              SERVER   post                                         id=d01ac1ff parent=-
+    gateway              CLIENT   post                                         id=e740f3d7 parent=d01ac1ff
+    gateway              CLIENT   post                                         id=3496fb81 parent=d01ac1ff
+    product-composite    SERVER   post /product-composite                      id=3496fb81 parent=d01ac1ff
+    product-composite    PRODUCER send                                         id=046cca09 parent=3496fb81
+    product-composite    PRODUCER send                                         id=d07f507b parent=3496fb81
+    product-composite    PRODUCER send                                         id=249d690e parent=3496fb81
+    product-composite    PRODUCER send                                         id=0aa8d872 parent=3496fb81
+    product-composite    PRODUCER send                                         id=eb3c2b64 parent=3496fb81
+    product-composite    PRODUCER send                                         id=15b56556 parent=3496fb81
+    product-composite    PRODUCER send                                         id=a22df190 parent=3496fb81
+    product              PRODUCER send                                         id=e75d2d3f parent=046cca09
+    review               PRODUCER send                                         id=89b7da32 parent=eb3c2b64
+    recommendation       PRODUCER send                                         id=5a006fc4 parent=d07f507b
+    recommendation       PRODUCER send                                         id=ca3f8827 parent=249d690e
+    recommendation       PRODUCER send                                         id=24c94543 parent=0aa8d872
+    review               PRODUCER send                                         id=d9b83bc4 parent=15b56556
+    review               PRODUCER send                                         id=f90243cb parent=a22df190
+
+===== BOOK SUITE =====
+51
+End, all tests OK: Wed Nov 11 06:00:01 UTC 2026
