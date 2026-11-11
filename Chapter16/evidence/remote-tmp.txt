@@ -1,0 +1,219 @@
+===== BUILD ALL SEVEN IMAGES (the book's Dockerfiles, unmodified) =====
+  --- microservices/product-service ---
+    built: 850MB
+    disk: 3.7G avail
+  --- microservices/review-service ---
+    built: 870MB
+    disk: 3.4G avail
+  --- microservices/recommendation-service ---
+    built: 850MB
+    disk: 3.2G avail
+  --- microservices/product-composite-service ---
+    built: 855MB
+    disk: 3.2G avail
+  --- spring-cloud/gateway ---
+    built: 837MB
+    disk: 2.9G avail
+  --- spring-cloud/authorization-server ---
+    built: 839MB
+    disk: 2.7G avail
+  --- spring-cloud/config-server ---
+    built: 800MB
+    disk: 2.5G avail
+
+===== ALL hands-on IMAGES, WITH SHARED-LAYER TOTALS =====
+
+  --- what the manifests expect to exist ---
+  hands-on/auth-server
+  hands-on/auth-server:v1
+  hands-on/config-server
+  hands-on/config-server:v1
+  hands-on/gateway
+  hands-on/gateway:v1
+  hands-on/product-composite-service
+  hands-on/product-composite-service:v1
+  hands-on/product-service
+  hands-on/product-service:v1
+  hands-on/recommendation-service
+  hands-on/recommendation-service:v1
+  hands-on/review-service
+  hands-on/review-service:v1
+
+===== DISK TOTAL =====
+  2.5G avail, 92% used
+  docker storage: 5.4G
+--- ch16-images.txt pulled ---
+===== 0. TAG MISMATCH: manifests want :v1, build produced 1.0-SNAPSHOT =====
+  manifest image: hands-on/auth-server
+  manifest image: hands-on/auth-server:v1
+  manifest image: hands-on/config-server
+  manifest image: hands-on/config-server:v1
+  manifest image: hands-on/gateway
+  manifest image: hands-on/gateway:v1
+  manifest image: hands-on/product-composite-service
+  manifest image: hands-on/product-composite-service:v1
+  manifest image: hands-on/product-service
+  manifest image: hands-on/product-service:v1
+  manifest image: hands-on/recommendation-service
+  manifest image: hands-on/recommendation-service:v1
+  manifest image: hands-on/review-service
+  manifest image: hands-on/review-service:v1
+! Using the docker-env command with the containerd runtime is a highly experimental feature, please provide feedback or contribute to make it better
+Identity added: /home/codespace/.minikube/machines/minikube/id_rsa (/home/codespace/.minikube/machines/minikube/id_rsa)
+  tagged hands-on/product-service:v1
+  tagged hands-on/review-service:v1
+  tagged hands-on/recommendation-service:v1
+  tagged hands-on/product-composite-service:v1
+  tagged hands-on/gateway:v1
+  tagged hands-on/authorization-server:v1
+  tagged hands-on/config-server:v1
+  images now present:
+
+===== 1. WHAT THE DEV OVERLAY APPLIES =====
+bases:
+- ../../base
+resources:
+- mongodb-dev.yml
+- rabbitmq-dev.yml
+- mysql-dev.yml
+  manifests in dev overlay:
+    kind: Deployment
+    image: mongo:3.6.9
+    kind: Service
+    kind: Deployment
+    image: mysql:5.7
+    kind: Service
+    kind: Deployment
+    image: rabbitmq:3.7.8-management
+    kind: Service
+
+===== 2. APPLY THE DEV OVERLAY (the book's whole stack, Eureka removed) =====
+# Warning: 'bases' is deprecated. Please use 'resources' instead. Run 'kustomize edit fix' to update your Kustomization automatically.
+service/auth-server created
+service/config-server created
+service/gateway created
+service/mongodb created
+service/mysql created
+service/product created
+service/product-composite created
+service/rabbitmq created
+service/recommendation created
+service/review created
+service/zipkin-server created
+deployment.apps/auth-server created
+deployment.apps/config-server created
+deployment.apps/gateway created
+deployment.apps/mongodb created
+deployment.apps/mysql created
+deployment.apps/product created
+deployment.apps/product-composite created
+deployment.apps/rabbitmq created
+deployment.apps/recommendation created
+deployment.apps/review created
+deployment.apps/zipkin-server created
+
+===== 3. DID EVERY POD START? (imagePull is the usual failure) =====
+NAME                                 READY   STATUS              RESTARTS   AGE   IP            NODE       NOMINATED NODE   READINESS GATES
+auth-server-648bc5bc57-vcxkx         0/1     ErrImageNeverPull   0          45s   10.244.0.8    minikube   <none>           <none>
+config-server-84d979bfcb-zs5xj       0/1     ContainerCreating   0          45s   <none>        minikube   <none>           <none>
+gateway-ccbb96f9b-gq86d              0/1     ErrImageNeverPull   0          45s   10.244.0.9    minikube   <none>           <none>
+mongodb-7f4c86cf78-mwh5d             1/1     Running             0          45s   10.244.0.10   minikube   <none>           <none>
+mysql-bf6c84867-rqr66                1/1     Running             0          45s   10.244.0.11   minikube   <none>           <none>
+nginx-deploy-7cc8ff4856-9bf2p        1/1     Running             0          15m   10.244.0.3    minikube   <none>           <none>
+product-88d9d48-kcb9q                0/1     ErrImageNeverPull   0          45s   10.244.0.12   minikube   <none>           <none>
+product-composite-5ffbfc48bd-84j99   0/1     ErrImageNeverPull   0          45s   10.244.0.13   minikube   <none>           <none>
+rabbitmq-cd8cf9766-47wnc             0/1     Running             0          45s   10.244.0.14   minikube   <none>           <none>
+recommendation-5b6655d949-xvpfm      0/1     ErrImageNeverPull   0          45s   10.244.0.15   minikube   <none>           <none>
+review-585f6c4956-kn5jx              0/1     ErrImageNeverPull   0          45s   10.244.0.16   minikube   <none>           <none>
+zipkin-server-c849854f5-wlvls        0/1     ContainerCreating   0          44s   <none>        minikube   <none>           <none>
+
+  --- any pod NOT running/ready, with the reason kernel ---
+    auth-server-648bc5bc57-vcxkx: ErrImageNeverPull - Container image "hands-on/auth-server" is not present with pull policy of Never
+    config-server-84d979bfcb-zs5xj: ContainerCreating - 
+    gateway-ccbb96f9b-gq86d: ErrImageNeverPull - Container image "hands-on/gateway" is not present with pull policy of Never
+    product-88d9d48-kcb9q: ErrImageNeverPull - Container image "hands-on/product-service" is not present with pull policy of Never
+    product-composite-5ffbfc48bd-84j99: ErrImageNeverPull - Container image "hands-on/product-composite-service" is not present with pull policy of Never
+    recommendation-5b6655d949-xvpfm: ErrImageNeverPull - Container image "hands-on/recommendation-service" is not present with pull policy of Never
+    review-585f6c4956-kn5jx: ErrImageNeverPull - Container image "hands-on/review-service" is not present with pull policy of Never
+    zipkin-server-c849854f5-wlvls: ContainerCreating - 
+
+===== 4. SERVICES AND DISCOVERY (Eureka is gone; k8s Services replace it) =====
+NAME                TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                       AGE
+auth-server         ClusterIP   10.98.192.75     <none>        80/TCP                        45s
+config-server       ClusterIP   10.107.190.139   <none>        8888/TCP                      45s
+gateway             NodePort    10.107.123.177   <none>        443:31443/TCP                 45s
+kubernetes          ClusterIP   10.96.0.1        <none>        443/TCP                       16m
+mongodb             ClusterIP   10.104.39.69     <none>        27017/TCP                     45s
+mysql               ClusterIP   10.97.36.237     <none>        3306/TCP                      45s
+nginx-service       NodePort    10.104.42.210    <none>        80:30080/TCP                  15m
+product             ClusterIP   10.98.231.8      <none>        80/TCP                        45s
+product-composite   ClusterIP   10.99.103.49     <none>        80/TCP                        45s
+rabbitmq            ClusterIP   10.110.10.51     <none>        5671/TCP,5672/TCP,15672/TCP   45s
+recommendation      ClusterIP   10.101.51.56     <none>        80/TCP                        45s
+review              ClusterIP   10.96.151.87     <none>        80/TCP                        45s
+zipkin-server       ClusterIP   10.99.134.35     <none>        9411/TCP                      45s
+
+===== 5. END-TO-END: composite through the k8s Service name =====
+pod/curl-probe created
+  --- curl-probe log ---
+
+===== 6. DISK AND MEMORY HEADROOM =====
+  disk 720M avail, 98% used
+  mem 12GB avail of 15GB
+error: Metrics API not available
+--- ch16-deploy.txt pulled ---
+===== BUILD THE REMAINING SIX INTO CONTAINERD =====
+  built hands-on/review-service:v1    disk: 552M avail
+  built hands-on/recommendation-service:v1    disk: 454M avail
+  built hands-on/product-composite-service:v1    disk: 340M avail
+  built hands-on/gateway:v1    disk: 253M avail
+  built hands-on/authorization-server:v1    disk: 156M avail
+  built hands-on/config-server:v1    disk: 115M avail
+
+===== ALL hands-on IMAGES VISIBLE TO THE KUBELET =====
+  docker.io/hands-on/review-service:v1
+  docker.io/hands-on/recommendation-service:v1
+  docker.io/hands-on/product-service:v1
+  docker.io/hands-on/product-composite-service:v1
+  docker.io/hands-on/gateway:v1
+  docker.io/hands-on/config-server:v1
+  docker.io/hands-on/authorization-server:v1
+
+===== RE-DEPLOY SO PODS REATTEMPT THE NOW-PRESENT IMAGES =====
+
+===== POD STATE =====
+NAME                                READY   STATUS              RESTARTS      AGE     IP            NODE       NOMINATED NODE   READINESS GATES
+auth-server-59f66bf589-mjtxf        0/1     ErrImageNeverPull   0             61s     10.244.0.26   minikube   <none>           <none>
+auth-server-5d4dd8bd98-9shwz        0/1     ErrImageNeverPull   0             5m13s   10.244.0.19   minikube   <none>           <none>
+config-server-66df858dbc-5kzvt      0/1     ContainerCreating   0             5m13s   <none>        minikube   <none>           <none>
+config-server-7bff45468-mz8df       0/1     ContainerCreating   0             61s     <none>        minikube   <none>           <none>
+gateway-6b65df64cb-lbbjt            0/1     ErrImageNeverPull   0             61s     10.244.0.29   minikube   <none>           <none>
+gateway-7597d7d4d7-szdc2            0/1     ErrImageNeverPull   0             5m12s   10.244.0.20   minikube   <none>           <none>
+mongodb-5bf9766858-b8ckw            1/1     Running             1 (56s ago)   61s     10.244.0.27   minikube   <none>           <none>
+mysql-697948964c-ctlzs              1/1     Running             3 (28s ago)   61s     10.244.0.28   minikube   <none>           <none>
+product-6758b565f6-52r7m            0/1     ErrImageNeverPull   0             59s     10.244.0.32   minikube   <none>           <none>
+product-7d4d85b456-r28lj            0/1     ErrImageNeverPull   0             5m12s   10.244.0.21   minikube   <none>           <none>
+product-composite-7cdf94c84-rlfk5   0/1     ErrImageNeverPull   0             5m12s   10.244.0.22   minikube   <none>           <none>
+product-composite-bdb64d86d-dxrz2   0/1     ErrImageNeverPull   0             59s     10.244.0.34   minikube   <none>           <none>
+rabbitmq-cd8cf9766-47wnc            1/1     Terminating         0             10m     10.244.0.14   minikube   <none>           <none>
+rabbitmq-d778cdc74-rmh5f            1/1     Running             2 (27s ago)   60s     10.244.0.30   minikube   <none>           <none>
+recommendation-587f6fb9-xtrpd       0/1     ErrImageNeverPull   0             59s     10.244.0.35   minikube   <none>           <none>
+    auth-server-59f66bf589-mjtxf: ErrImageNeverPull Container image "hands-on/auth-server" is not present with pull policy of Never
+    auth-server-5d4dd8bd98-9shwz: ErrImageNeverPull Container image "hands-on/auth-server" is not present with pull policy of Never
+    config-server-66df858dbc-5kzvt: ContainerCreating 
+    config-server-7bff45468-mz8df: ContainerCreating 
+    gateway-6b65df64cb-lbbjt: ErrImageNeverPull Container image "hands-on/gateway" is not present with pull policy of Never
+    gateway-7597d7d4d7-szdc2: ErrImageNeverPull Container image "hands-on/gateway" is not present with pull policy of Never
+    product-6758b565f6-52r7m: ErrImageNeverPull Container image "hands-on/product-service" is not present with pull policy of Never
+    product-7d4d85b456-r28lj: ErrImageNeverPull Container image "hands-on/product-service" is not present with pull policy of Never
+    product-composite-7cdf94c84-rlfk5: ErrImageNeverPull Container image "hands-on/product-composite-service" is not present with pull policy of Never
+    product-composite-bdb64d86d-dxrz2: ErrImageNeverPull Container image "hands-on/product-composite-service" is not present with pull policy of Never
+    recommendation-587f6fb9-xtrpd: ErrImageNeverPull Container image "hands-on/recommendation-service" is not present with pull policy of Never
+    recommendation-6c4fc8f989-wwpc9: ErrImageNeverPull Container image "hands-on/recommendation-service" is not present with pull policy of Never
+    review-58ff5f97fb-mpj5z: ErrImageNeverPull Container image "hands-on/review-service" is not present with pull policy of Never
+    review-6f9bb79c6-rqcf5: ErrImageNeverPull Container image "hands-on/review-service" is not present with pull policy of Never
+
+===== DISK / MEMORY =====
+  disk 69M avail, 100% used
+  mem 12GB avail of 15GB
+--- ch16-images2.txt pulled ---

@@ -1,0 +1,50 @@
+===== PREREQUISITES NOW PRESENT =====
+  secret: config-server-secrets  secret: config-client-credentials  images: 15 hands-on refs
+
+===== RESTART EVERYTHING =====
+  pods deleted; waiting for the stack to converge
+  disk 277M avail, 100% used
+
+NAME                                 READY   STATUS    RESTARTS      AGE    IP            NODE       NOMINATED NODE   READINESS GATES
+auth-server-674f85f5f5-g66tm         0/1     Running   0             100s   10.244.0.91   minikube   <none>           <none>
+config-server-7765dbf766-fxr64       1/1     Running   0             100s   10.244.0.88   minikube   <none>           <none>
+gateway-5b7f4d79f8-g4q2l             0/1     Running   0             100s   10.244.0.89   minikube   <none>           <none>
+mongodb-868c84564-xcdm9              1/1     Running   0             100s   10.244.0.87   minikube   <none>           <none>
+mysql-6796566749-j5dcw               1/1     Running   0             100s   10.244.0.90   minikube   <none>           <none>
+product-684bc94c4b-vwzx9             0/1     Running   0             100s   10.244.0.92   minikube   <none>           <none>
+product-composite-7dcf8cf65d-q2ttk   0/1     Running   0             100s   10.244.0.93   minikube   <none>           <none>
+rabbitmq-7c5c5cc564-7gbrg            1/1     Running   0             100s   10.244.0.94   minikube   <none>           <none>
+recommendation-76cf86c47-gfd5f       0/1     Running   0             100s   10.244.0.96   minikube   <none>           <none>
+review-7db6b88d86-n5mjd              0/1     Running   0             100s   10.244.0.95   minikube   <none>           <none>
+zipkin-server-58bcc5cc9c-zvxks       1/1     Running   1 (63s ago)   100s   10.244.0.97   minikube   <none>           <none>
+
+===== THE COMPOSITE'S OWN LOG IS THE ARBITER =====
+  --- config-server ---
+  --- gateway ---
+  --- product ---
+  --- review ---
+  --- recommendation ---
+  --- product-composite ---
+  --- auth-server ---
+
+===== END-TO-END: hit the composite through the k8s Service =====
+pod/curl-probe created
+
+===== SERVICES / ENDPOINTS (k8s DNS replaced Eureka) =====
+SVC                 ADDR     PORT
+auth-server         <none>   <none>
+config-server       <none>   <none>
+gateway             <none>   <none>
+kubernetes          <none>   <none>
+mongodb             <none>   <none>
+mysql               <none>   <none>
+nginx-service       <none>   <none>
+product-composite   <none>   <none>
+product             <none>   <none>
+rabbitmq            <none>   <none>
+recommendation      <none>   <none>
+
+===== DISK / MEMORY =====
+  disk 277M avail, 100% used
+  mem 10GB avail of 15GB
+error: Metrics API not available

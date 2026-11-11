@@ -1,0 +1,37 @@
+===== 1. PORT: manifest vs Dockerfile =====
+  --- product.yml container/probe ports ---
+  26:        - containerPort: 80
+  --- Dockerfile EXPOSE ---
+  3:EXPOSE 8080
+  7:ENTRYPOINT ["java","-jar","/app.jar"]
+  --- application.yml server.port (what the app actually binds) ---
+  --- ch16 config-repo product.yml (the native profile the k8s stack uses) ---
+  1:server.port: 7001
+  2:server.error.include-message: always
+  6:  port: 27017
+  38:server.port: 80
+
+===== 2. IS config-server ACTUALLY SERVING? =====
+error: --rm should only be used for attached containers
+
+===== 3. config-server's OWN log =====
+  2026-11-11 07:02:23.580  INFO 1 --- [nio-8888-exec-6] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:02:33.574  INFO 1 --- [nio-8888-exec-2] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:02:43.576  INFO 1 --- [nio-8888-exec-5] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:02:53.569  INFO 1 --- [nio-8888-exec-4] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:03:03.576  INFO 1 --- [nio-8888-exec-8] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:03:13.575  INFO 1 --- [nio-8888-exec-6] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:03:23.570  INFO 1 --- [nio-8888-exec-2] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:03:33.565  INFO 1 --- [nio-8888-exec-5] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:03:43.572  INFO 1 --- [nio-8888-exec-4] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:03:53.580  INFO 1 --- [nio-8888-exec-8] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:04:03.570  INFO 1 --- [nio-8888-exec-6] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:04:13.571  INFO 1 --- [nio-8888-exec-2] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:04:23.647  INFO 1 --- [nio-8888-exec-9] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+  2026-11-11 07:04:33.569  INFO 1 --- [nio-8888-exec-9] o.s.c.c.s.e.NativeEnvironmentRepository  : Adding property source: file:/config-repo/application.yml (document #0)
+
+===== 4. a product pod: what port is it actually LISTENING on? =====
+  (ss -ltn inside the product pod is not possible without shell access; using crictl inspect above)
+
+===== 5. DISK =====
+  276M avail, 100% used

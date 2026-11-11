@@ -13,21 +13,20 @@ of registry lookup. The chapter also keeps the ch12 configuration sourcing
 `config-client-credentials` as a Secret so the config-server credentials do not
 live in a manifest.
 
-## Verdict: PARTIAL — reached four distinct blockers, three fixed; stopped by a
-## hard capacity limit, not by the code
+## Verdict: PARTIAL — five real defects fixed; still not end-to-end
 
 | Layer reached | State | Evidence |
 |---|---|---|
-| Cluster | Ready | minikube v1.37.0 on containerd, `kubectl get nodes` Ready |
-| 7 Spring images | Built | all present in containerd's store |
-| Tags | Fixed | `hands-on/*:latest` resolves in `minikube image ls` |
-| Secret | Fixed | `config-client-credentials` created; pods advanced past `CreateContainerConfigError` |
-| **Full stack running** | **NOT reached** | disk exhaustion |
-
-Four services reached `Running` — `gateway`, `mongodb`, `mysql`, `rabbitmq` — and
-`product`, `product-composite`, `recommendation` reached `Running` but not `Ready`
-(still waiting on the config-server, which could not start). No end-to-end
-request was completed, so no suite or aggregate assertion is recorded here.
+| Cluster | Ready | minikube v1.37.0 on containerd |
+| 7 Spring images | Built | all in containerd, `:v1` and `:latest` |
+| Tags | Fixed | manifests reference images untagged → `:latest` |
+| Secret `config-client-credentials` | Fixed | pods advanced past `CreateContainerConfigError` |
+| Image name `auth-server` | Fixed | manifests say `auth-server`, the build dir says `authorization-server` |
+| ConfigMap `config-repo` | Fixed | mounts the chapter's 7 real files (1133–3998 bytes each) |
+| Secret `config-server-secrets` | Fixed | pods advanced past `FailedMount` |
+| **config-server** | **Ready** | `1/1 Running`, serving `/config-repo/application.yml` |
+| Stateful deps | Ready | mysql, mongodb, rabbitmq, zipkin `1/1 Running` |
+| **7 microservices** | **NOT READY** | Running but looping on config fetch; probe gets connection refused on port 80 |
 
 ## Environment actually used
 
@@ -83,6 +82,25 @@ The same pair used for ch12–14 (`Chapter12/.env`). Not in the book, not in the
 repo — an operator-supplied input.
 
 ```sh
+# 4. the manifests also mount a ConfigMap. NO SCRIPT SHIPS TO CREATE IT.
+#    Build it from the chapter's own config-repo/ (its 7 yml files).
+cd Chapter16
+kubectl create configmap config-repo --from-file=config-repo/
+kubectl create secret generic config-server-secrets \
+  --from-literal=CONFIG_SERVER_USR=dev-usr --from-literal=CONFIG_SERVER_PWD=dev-pwd
+```
+Without this, `config-server` never leaves `ContainerCreating` with
+`FailedMount ... configmap "config-repo" not found`, and every microservice then
+loops in the config retry forever. This is the dependency the chapter does not
+mention, and it is the one that stops the whole stack.
+
+```sh
+# 5. the manifest names the auth image differently from its build directory
+minikube ssh -- "sudo ctr -n k8s.io images tag \
+  docker.io/hands-on/authorization-server:latest docker.io/hands-on/auth-server:latest"
+```
+
+```sh
 # 4. apply the dev overlay and watch the pods
 kubectl apply -k kubernetes/services/overlays/dev
 kubectl rollout restart deployment
@@ -94,19 +112,30 @@ auth-server, config-server, gateway, mongodb, mysql, product, product-composite,
 rabbitmq, recommendation, review, zipkin-server) — with kustomize's only
 complaint being that `bases:` is deprecated in favour of `resources:`.
 
-## Problems encountered — four, all mine, in the order hit
+## Problems encountered — each in the order hit, with its evidence
 
 | What happened | Cause | Fix |
 |---|---|---|
-| `kubectl apply` succeeded; every pod `ErrImageNeverPull`, "not present with pull policy of Never" | I built with `eval $(minikube docker-env)` + `docker build`. That populates a docker store the kubelet never reads — containerd is where minikube v1.39 stores images. `minikube image ls` showed none of my seven while the docker store held **14 duplicate copies** | Build with `minikube image build`, the containerd-native path; delete the docker-store duplicates (recovered 1.6 G) |
-| Pods still `ErrImageNeverPull` after `minikube image build` succeeded and the image was visible in `minikube image ls` | I tagged `:v1`; the manifests reference the images **untagged**, which Kubernetes resolves to `:latest`. `base/kustomization.yml` has no `images:` transformer | `ctr -n k8s.io images tag ... :v1 ... :latest` inside minikube — near-zero disk cost, no rebuild |
-| Pods then `CreateContainerConfigError`, `secret "config-client-credentials" not found` | The manifests use `envFrom: secretRef: config-client-credentials`; no Secret existed | `kubectl create secret generic config-client-credentials` with the ch12–14 credential pair |
-| `gateway mongodb mysql rabbitmq` Running but `config-server` stuck `ContainerCreating`, `zipkin-server` **OOMKilled**, `mysql`/`rabbitmq` restarting in `Error` | **Disk exhaustion.** The root filesystem is a fixed 32 GB overlay with no growth possible; between the cluster, seven ~215 MB service images, the shared `openjdk:12.0.2` base (~900 MB), mysql/mongo/rabbitmq/zipkin pulls and the minikube node, it reached 100 % | Not fixed — see §Where it stopped |
+| `kubectl apply` succeeded; every pod `ErrImageNeverPull`, "not present with pull policy of Never" | I built with `eval $(minikube docker-env)` + `docker build`. That populates a docker store the kubelet never reads — containerd is where minikube v1.39 stores images. `minikube image ls` showed none of my seven while the docker store held **14 duplicate copies** | Build with `minikube image build`; delete the docker-store duplicates (recovered 1.6 G) |
+| Pods still `ErrImageNeverPull` after `minikube image build` succeeded | I tagged `:v1`; `base/kustomization.yml` has **no `images:` tag transformer**, so the manifests reference images **untagged** → `:latest` | `minikube ssh -- sudo ctr -n k8s.io images tag ... :v1 ... :latest` — no rebuild, ~no disk |
+| Pods then `CreateContainerConfigError`, `secret "config-client-credentials" not found` | manifests `envFrom: secretRef`; no Secret existed | `kubectl create secret generic config-client-credentials` with the ch12–14 pair |
+| `auth-server` alone `ErrImageNeverPull` | the manifest says `image: hands-on/auth-server`, but the build directory is `spring-cloud/authorization-server` — **the book's directory name and manifest name differ** | `ctr images tag docker.io/hands-on/authorization-server:latest docker.io/hands-on/auth-server:latest` |
+| `config-server` stuck `ContainerCreating`; event `FailedMount ... configmap "config-repo" not found` | the manifest mounts `config-repo-volume` from `configMap: config-repo`; no ConfigMap existed. **`kubernetes/` ships no script to create it** | `kubectl create configmap config-repo --from-file=<chapter>/config-repo/` — the chapter's own 7 yml files |
+| `config-server` then `FailedMount` again, for `config-server-secrets` | the manifest also `envFrom` that Secret (it needs `CONFIG_SERVER_USR`/`PWD`) | `kubectl create secret generic config-server-secrets --from-literal=...` |
+| 3–4 stale ReplicaSets per service; duplicate pods; crash loops | repeated `kubectl rollout restart` left old RS behind | `kubectl delete rs --all` + `kubectl delete pods --all`, one clean generation |
 
-A fifth, non-fatal: `minikube image build -q` fails outright — the command has
-**no `-q` flag** (only `--all`, `--build-env`, `-f`, `-n`, `--push`, `-t`). My
-first build used no `-q` and worked; the batch run added `-q` and all six failed
-silently.
+Two of these were my own faults of *reading*, and both are cheap but expensive:
+
+- **A false negative I nearly acted on**: `ls -la /config-repo` inside the config-server
+  pod showed files of "18–28 bytes", which I read as a truncated ConfigMap. The
+  real values are intact (`product.yml` = 1314 bytes, `application.yml` = 1133).
+  The number came from `awk '{print $9" "$5}'` printing the size of the `..data`
+  **symlink**, not the target. The fix for this class is the one the skill already
+  carries: verify with the data itself (`kubectl get configmap -o json`), never with
+  a formatted listing.
+- `minikube image build -q` fails outright — the command has **no `-q` flag**
+  (only `--all`, `--build-env`, `-f`, `-n`, `--push`, `-t`). My first build used
+  no `-q` and worked; the batch run added `-q` and all six failed silently.
 
 ## Where it stopped — a capacity limit, not a defect
 
@@ -122,16 +151,32 @@ after the seven docker-store
 after the six rebuilt images .. 115 M   <- the floor of the remaining budget
 after deleting gradle build
   dirs (jars already baked) .. 565 M
-final ......................... 161 M avail, 100% used
+after removing nginx image
+  and my own /tmp logs ....... 360 M
+current ....................... 280 M avail, 100% used
 ```
 
-With the filesystem full, the containers can no longer write their writable layers
-or logs: `zipkin-server` is `OOMKilled`, `mysql` and `rabbitmq` restart reporting
-`Error`, and `config-server` never leaves `ContainerCreating`.
+Reclaiming bought ~180 MB and fixed the cluster's crash-looping, but the
+filesystem is still full. With it at 100 % the containers cannot write their
+writable layers, so `config-server` would not mount, `zipkin-server` was
+OOMKilled, and `mysql`/`rabbitmq` restarted reporting `Error`.
 
-Chapter 16 therefore reaches **"images resolve, Secret resolves, four pods
-Running"** and stops at **disk**. There is no configuration or code fault to
-record; the environment cannot hold the chapter's whole topology at once.
+After freeing that space, `config-server` reached `1/1 Running` and serves the
+real config — but the seven microservices still never reach `Started`. Their own
+logs show the boot banner, then `Fetching config from server at :
+http://config-server:8888` repeating every ~4 s with **no error, no exception and
+no `Connect Timeout Exception`** — unlike ch12–14, where the same loop printed the
+exception. A `grep -inE 'error|exception|caused by|denied|bind|Started|Tomcat'`
+over the whole log returns nothing. They are receiving a response but cannot
+proceed, and their readiness probe (`/actuator/health` on port 80) gets
+`connection refused` because no server ever binds.
+
+The book's `product.yml` sets `server.port: 80` for the `docker` profile and
+`server.port: 7001` by default, with `containerPort: 80` and
+`targetPort: 80` in the manifest — so port 80 is the intended bind. Stopping here
+rather than guessing at the remaining cause: the honest next probe is whether
+port 80 can be bound at all in this container, or whether the config response is
+being rejected by the client.
 
 ## What this leaves open for Chapters 17–20
 
@@ -192,12 +237,19 @@ Secret. The reason it cannot be verified end to end here is capacity, not design
 
 ## Still unverified (this chapter)
 
-- No end-to-end request: `config-server` never became Ready, so the four
-  microservices never left `Running`→`Ready` and no aggregate was exercised.
-- Kubernetes-native discovery (client-side vs server-side, Service DNS resolution
-  between the microservices) is unverified — the claim rests on the source
-  removal of Eureka, not on observed DNS lookups.
-- `overlays/prod` was never applied.
-- Zipkin was never queried.
-- Nothing from this chapter was committed; the state was left on the codespace.
+- **No end-to-end request.** The seven microservices never reach `Started`, so no
+  aggregate was exercised and the book's `test-em-all.bash` was not run against
+  the cluster. Every assertion in this report about the services is a *negative*
+  observation, not a demonstration.
+- **Kubernetes-native discovery is unproven.** The claim that Services replace
+  Eureka rests on the source removal of Eureka, not on observed DNS resolution —
+  the pods never bind a port, so no `product` → `review` interaction was seen.
+- `overlays/prod` was never applied. Zipkin was never queried.
+- The config-client retry loop has no diagnosed cause; the next probe is whether
+  port 80 can be bound in this container.
+- Chapter 17's prerequisite — a real public DNS name and a CA-issued certificate —
+  cannot be satisfied by a minikube in a codespace, and is blocked independently
+  of the disk ceiling documented above.
+- Nothing from this chapter was committed until now; intermediate state lived only
+  in the codespace and has now been captured to `Chapter16/evidence/`.
 

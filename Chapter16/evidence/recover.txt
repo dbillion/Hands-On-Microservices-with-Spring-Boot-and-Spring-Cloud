@@ -1,0 +1,59 @@
+===== 0. DISK BEFORE =====
+  160M avail, 100% used
+
+===== 1. RECLAIM: my own logs (already pulled to the host), apt lists, nginx =====
+  removed service + build logs
+  apt cache cleaned
+Deleted: docker.io/library/nginx:latest
+  nginx image removed
+  disk: 328M avail
+
+===== 2. CLEAR THE STALE REPLICASET HISTORY (3-4 generations each) =====
+  all replica sets deleted; every deployment scaled to 1
+  replica sets now: 11
+
+===== 3. GIVE THE PODS A FRESH, UNCONDITIONED START =====
+  disk: 360M avail
+NAME                                 READY   STATUS              RESTARTS      AGE   IP            NODE       NOMINATED NODE   READINESS GATES
+auth-server-674f85f5f5-b28rl         0/1     ErrImageNeverPull   0             76s   10.244.0.66   minikube   <none>           <none>
+config-server-7765dbf766-htv67       0/1     ContainerCreating   0             76s   <none>        minikube   <none>           <none>
+gateway-5b7f4d79f8-gf5fx             0/1     Running             0             76s   10.244.0.68   minikube   <none>           <none>
+mongodb-868c84564-pt7t5              1/1     Running             0             76s   10.244.0.67   minikube   <none>           <none>
+mysql-6796566749-sf5cz               1/1     Running             0             76s   10.244.0.70   minikube   <none>           <none>
+product-684bc94c4b-k8c98             0/1     Running             0             76s   10.244.0.69   minikube   <none>           <none>
+product-composite-7dcf8cf65d-cgnd8   0/1     Running             0             76s   10.244.0.72   minikube   <none>           <none>
+rabbitmq-7c5c5cc564-gqbzf            1/1     Running             0             76s   10.244.0.71   minikube   <none>           <none>
+recommendation-76cf86c47-rcjbr       0/1     Running             0             76s   10.244.0.74   minikube   <none>           <none>
+review-7db6b88d86-kt9nb              0/1     Running             0             76s   10.244.0.73   minikube   <none>           <none>
+zipkin-server-58bcc5cc9c-sch6p       1/1     Running             1 (45s ago)   75s   10.244.0.75   minikube   <none>           <none>
+
+===== 4. STILL NOT READY? READ THE PROVIDER'S LOG LINE, NOT A GUESS =====
+    auth-server-674f85f5f5-b28rl: ErrImageNeverPull Container image "hands-on/auth-server" is not present with pull policy of Never
+    config-server-7765dbf766-htv67: ContainerCreating 
+
+===== 5. THE COMPOSITE'S OWN LOG IS THE ARBITER =====
+  --- config-server (last 4 lines) ---
+  --- product (last 4 lines) ---
+    2026-11-11 06:56:18.129  INFO [product,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+    2026-11-11 06:56:18.134  INFO [product,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Connect Timeout Exception on Url - http://config-server:8888. Will be trying the next url if available
+    2026-11-11 06:56:28.141  INFO [product,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+    2026-11-11 06:56:28.144  INFO [product,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Connect Timeout Exception on Url - http://config-server:8888. Will be trying the next url if available
+  --- review (last 4 lines) ---
+    2026-11-11 06:56:19.085  INFO [review,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+    2026-11-11 06:56:19.089  INFO [review,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Connect Timeout Exception on Url - http://config-server:8888. Will be trying the next url if available
+    2026-11-11 06:56:29.097  INFO [review,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+    2026-11-11 06:56:29.101  INFO [review,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Connect Timeout Exception on Url - http://config-server:8888. Will be trying the next url if available
+  --- recommendation (last 4 lines) ---
+    2026-11-11 06:56:20.339  INFO [recommendation,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+    2026-11-11 06:56:20.343  INFO [recommendation,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Connect Timeout Exception on Url - http://config-server:8888. Will be trying the next url if available
+    2026-11-11 06:56:30.350  INFO [recommendation,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+    2026-11-11 06:56:30.355  INFO [recommendation,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Connect Timeout Exception on Url - http://config-server:8888. Will be trying the next url if available
+  --- product-composite (last 4 lines) ---
+    2026-11-11 06:56:20.374  INFO [product-composite,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+    2026-11-11 06:56:20.379  INFO [product-composite,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Connect Timeout Exception on Url - http://config-server:8888. Will be trying the next url if available
+    2026-11-11 06:56:30.387  INFO [product-composite,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at : http://config-server:8888
+    2026-11-11 06:56:30.392  INFO [product-composite,,,] 1 --- [           main] c.c.c.ConfigServicePropertySourceLocator : Connect Timeout Exception on Url - http://config-server:8888. Will be trying the next url if available
+
+===== 6. DISK / MEMORY =====
+  disk 360M avail, 99% used
+  mem 11GB avail of 15GB

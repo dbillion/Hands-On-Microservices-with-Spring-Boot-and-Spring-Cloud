@@ -1,0 +1,48 @@
+===== 1. THE CONFIGMAP'S ACTUAL KEYS =====
+  key count: 7
+    'application.yml'
+    'auth-server.yml'
+    'gateway.yml'
+    'product-composite.yml'
+    'product.yml'
+    'recommendation.yml'
+    'review.yml'
+  binary keys: none
+
+===== 2. WHAT IS ACTUALLY ON DISK in the config-repo dir =====
+    bytes
+  . 4096 bytes
+  .. 4096 bytes
+  application.yml 1133 bytes
+  auth-server.yml 116 bytes
+  gateway.yml 1318 bytes
+  product-composite.yml 3998 bytes
+  product.yml 1314 bytes
+  recommendation.yml 1335 bytes
+  review.yml 1666 bytes
+
+===== 3. WHAT config-server SEES inside its container =====
+  pod: config-server-7765dbf766-fxr64
+   
+  . 4096
+  .. 4096
+  ..2026_11_11_07_01_00.3694061552 4096
+  application.yml 22
+  auth-server.yml 22
+  ..data 32
+  gateway.yml 18
+  product-composite.yml 28
+  product.yml 18
+  recommendation.yml 25
+  review.yml 17
+
+===== 4. THE REQUEST A SERVICE ACTUALLY MAKES (and what comes back) =====
+  GET /product/docker:
+
+  GET /product/default:
+
+
+===== 5. the comtpon's launch args (in case a profile/name is forced) =====
+
+===== 6. DISK =====
+  276M avail, 100% used
