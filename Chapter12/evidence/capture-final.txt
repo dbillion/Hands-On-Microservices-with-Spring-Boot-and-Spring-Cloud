@@ -1,0 +1,66 @@
+===== FIX 3: free 8761 too, so eureka restarts with decrypted config =====
+  Attempt 2 freed 7000-7003 and 8443 only. Eureka on 8761 was still the
+  attempt-1 process holding password = cipher-hex.
+  ports still bound after kill: 0
+
+===== START: config server, then eureka, then clients =====
+  config-server Started: 1  port 8888: 1
+  eureka Started: 1  port 8761: 1
+  config server serves eureka-password decrypted (not hex):
+    "app.eureka-password":"p"
+  eureka now accepts u:p: 200
+  eureka with wrong password: 401
+  auth-server Started: 1
+  gateway Started: 1
+  product-service Started: 1  eureka-401: 0  registration-failed: 0
+  review-service Started: 1  eureka-401: 0  registration-failed: 0
+  recommendation-service Started: 1  eureka-401: 0  registration-failed: 0
+  product-composite-service Started: 1  eureka-401: 0  registration-failed: 0
+
+  --- eureka registry now (provider's own view, not my inference) ---
+    "name":"AUTH-SERVER"
+    "name":"GATEWAY"
+    "name":"PRODUCT"
+    "name":"PRODUCT-COMPOSITE"
+    "name":"RECOMMENDATION"
+    "name":"REVIEW"
+
+  --- composite health through externalised config ---
+    overall: UP
+    discoveryClient services: ['gateway', 'auth-server', 'product', 'review', 'recommendation', 'product-composite']
+    rabbit: UP
+
+===== THE BOOK'S OWN SUITE =====
+  PORT default: :${PORT=8443}
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   313    0     0  100   313      0   8997 --:--:-- --:--:-- --:--:--  9205
+Test OK (HTTP Code: 200)
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   609    0     0  100   609      0  11334 --:--:-- --:--:-- --:--:-- 11490
+Wait for messages to be processed... 
+Test OK (HTTP Code: 200)
+Test OK (actual value: 2)
+Test OK (actual value: 3)
+Test OK (actual value: 3)
+All messages are now processed!
+Test OK (HTTP Code: 200)
+Test OK (actual value: 2)
+Test OK (actual value: 3)
+Test OK (actual value: 3)
+Test OK (HTTP Code: 404, {"timestamp":"2026-11-11T04:59:23.333845Z","path":"/product-composite/14","message":"No product found for productId: 14","error":"Not Found","status":404})
+Test OK (HTTP Code: 200)
+Test OK (actual value: 114)
+Test OK (actual value: 0)
+Test OK (actual value: 3)
+Test OK (HTTP Code: 200)
+Test OK (actual value: 214)
+Test OK (actual value: 3)
+Test OK (actual value: 0)
+Test OK (HTTP Code: 422, {"timestamp":"2026-11-11T04:59:23.580543Z","path":"/product-composite/-1","message":"Invalid productId: -1","error":"Unprocessable Entity","status":422})
+Test OK (actual value: "Invalid productId: -1")
+Test OK (HTTP Code: 400, {"timestamp":"2026-11-11T04:59:23.649+00:00","path":"/product-composite/invalidProductId","status":400,"error":"Bad Request","message":"Type mismatch.","requestId":"99d7903b-15"})
+Test OK (actual value: "Type mismatch.")
+Test OK (HTTP Code: 401, )
+Test OK (HTTP Code: 200)
+Test OK (HTTP Code: 403, )
+End, all tests OK: Wed Nov 11 04:59:23 UTC 2026

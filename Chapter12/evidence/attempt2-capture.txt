@@ -1,0 +1,42 @@
+===== FIX 1: correct env var for the encrypt key =====
+  Before: CONFIG_SERVER_ENCRYPT_KEY (a docker-compose variable name)
+  After:  ENCRYPT_KEY               (what Spring binds to encrypt.key)
+  Both values are identical; only the name the server reads differs.
+  Started: 1  port 8888: 1
+
+  --- is {cipher} now decrypted when SERVED? (expected: real words, not hex) ---
+  eureka-password / rabbitmq password from /product/default:
+    "app.eureka-password":"p"
+    "spring.rabbitmq.password":"guest"
+
+  --- positive control: does /decrypt work on the server? ---
+    decrypted: p
+===== FIX 2: restart the four clients so they fetch the decrypted config =====
+  product-service Started: 1  ACCESS_REFUSED: 0  401-config: 18
+  review-service Started: 1  ACCESS_REFUSED: 0  401-config: 18
+  recommendation-service Started: 1  ACCESS_REFUSED: 0  401-config: 20
+  product-composite-service Started: 1  ACCESS_REFUSED: 0  401-config: 19
+
+  --- health, and the binder that was DOWN ---
+    overall: UP
+    binders: UP
+    clientConfigServer: UP
+    discoveryComposite: UP
+    diskSpace: UP
+    hystrix: UP
+    ping: UP
+    rabbit: UP
+    reactiveDiscoveryClients: UP
+    refreshScope: UP
+
+===== THE BOOK'S OWN SUITE =====
+  PORT default read from the script: :${PORT=8443}
+Start Tests: Wed Nov 11 04:47:44 UTC 2026
+HOST=localhost
+PORT=8443
+Wait for: curl -k https://localhost:8443/actuator/health... , retry #1 , retry #2 , retry #3 , retry #4 , retry #5 , retry #6 , retry #7 , retry #8 , retry #9 , retry #10 , retry #11 , retry #12 , retry #13 , retry #14 , retry #15 , retry #16 , retry #17 , retry #18 , retry #19 , retry #20 , retry #21 , retry #22 , retry #23 , retry #24 , retry #25 , retry #26 , retry #27 , retry #28 , retry #29 , retry #30 , retry #31 , retry #32 , retry #33 , retry #34 , retry #35 , retry #36 , retry #37 , retry #38 , retry #39 , retry #40 , retry #41 , retry #42 , retry #43 , retry #44 , retry #45 , retry #46 , retry #47 , retry #48 , retry #49 , retry #50 , retry #51 , retry #52 , retry #53 , retry #54 , retry #55 , retry #56 , retry #57 , retry #58 , retry #59 , retry #60 , retry #61 , retry #62 , retry #63 , retry #64 , retry #65 , retry #66 , retry #67 , retry #68 , retry #69 , retry #70 , retry #71 , retry #72 , retry #73 , retry #74 , retry #75 , retry #76 , retry #77 , retry #78 , retry #79 , retry #80 , retry #81 , retry #82 , retry #83 , retry #84 , retry #85 , retry #86 , retry #87 , retry #88 , retry #89 , retry #90 , retry #91 , retry #92 , retry #93 , retry #94 , retry #95 , retry #96 , retry #97 , retry #98 , retry #99  Give up
+
+===== CROSS-SERVICE AGGREGATION (composite direct, needs bearer from ch11) =====
+  token acquired: NO
+
+===== EVIDENCE: services registered in eureka under externalised config =====

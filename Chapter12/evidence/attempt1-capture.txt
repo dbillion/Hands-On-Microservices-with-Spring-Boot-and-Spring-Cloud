@@ -1,0 +1,61 @@
+===== INFRA: recreate from scratch (codespace rebooted: /tmp wiped, containers exited) =====
+  Codespace reboot evidence: ch7kafka/ch7rabbit/ch7zk/ch6mysql/ch6mongo all Exited,
+  ss shows no listening port, /tmp empty. Containers are RECREATED, not started,
+  because a recycled machine has no container state to resume.
+  containers: ch7kafka ch7rabbit ch7zk ch6mysql ch6mongo 
+  ports listening: 3306=2 27017=2 9092=2 5672=2 2181=2
+  mysql ready for connections: 2
+
+===== CREDENTIALS: they ARE in the repo (dotfile .env), contrary to the earlier run =====
+  Earlier FINDINGS said the three vars were 'not in the repository'. They are, in
+  Chapter12/.env, which 'ls' without -a does not show and docker-compose auto-loads:
+    CONFIG_SERVER_ENCRYPT_KEY=my-very-secure-encrypt-key
+    CONFIG_SERVER_USR=dev-usr
+    CONFIG_SERVER_PWD=dev-pwd
+
+===== START CONFIG SERVER (native profile, user store + encrypt key supplied) =====
+  Started lines:        1
+  port 8888 listening:  1
+  generated password?:  0
+  ABORT/ERROR lines:    0
+
+  --- config server auth behaviour (expected 401 then 200) ---
+    no credentials        -> HTTP=401
+    dev-usr / dev-pwd     -> HTTP=200
+    wrong password        -> HTTP=401
+
+  --- decryption of {cipher} values (the encrypt key actually working) ---
+    product/default, encrypted fields only:
+    {"name":"product","profiles":["default"],"label":null,"version":null,"state":null,"propertySources":[{"name":"file:/workspaces/Hands-On-Microservices-with-Spring-Boot-and-Spring-Cloud/Chapter12/config-repo/product.yml (document #0)","source":{"server.port":7001,"server.error.include-message":"always","spring.data.mongodb.host":"localhost","spring.data.mongodb.port":27017,"spring.data.mongodb.database":"product-db","spring.cloud.stream.defaultBinder":"rabbit","spring.cloud.stream.default.contentType":"application/json","spring.cloud.stream.bindings.input.destination":"products","spring.cloud.stream.bindings.input.group":"productsGroup","spring.cloud.stream.bindings.input.consumer.maxAttempts":3,"spring.cloud.stream.bindings.input.consumer.backOffInitialInterval":500,"spring.cloud.stream.bindings.input.consumer.backOffMaxInterval":1000,"spring.cloud.stream.bindings.input.consumer.backOffMultiplier":2.0,"spring.cloud.stream.rabbit.bindings.input.consumer.autoBindDlq":true,"spring.cloud.stream.rabbit.bindings.input.consumer.republishToDlq":true,"spring.cloud.stream.kafka.bindings.input.consumer.enableDlq":true,"logging.level.root":"INFO","logging.level.se.magnus":"DEBUG","logging.level.org.springframework.data.mongodb.core.MongoTemplate":"DEBUG"}},{"name":"file:/workspaces/Hands-On-Microservices-with-Spring-Boot-and-Spring-Cloud/Chapter12/config-repo/application.yml (document #0)","source":{"app.eureka-username":"u","app.eureka-server":"localhost","app.auth-server":"localhost","eureka.client.serviceUrl.defaultZone":"http://${app.eureka-username}:${app.eureka-password}@${app.eureka-server}:8761/eureka/","eureka.client.initialInstanceInfoReplicationIntervalSeconds":5,"eureka.client.registryFetchIntervalSeconds":5,"eureka.instance.leaseRenewalIntervalInSeconds":5,"eureka.instance.leaseExpirationDurationInSeconds":5,"spring.rabbitmq.host":"127.0.0.1","spring.rabbitmq.port":5672,"spring.rabbitmq.username":"guest","spring.cloud.stream.kafka.binder.brokers":"127.0.0.1","spring.cloud.stream.kafka.binder.defaultBrokerPort":9092,"management.endpoint.health.show-details":"ALWAYS","management.endpoints.web.exposure.include":"*","app.eureka-password":"bf298f6d5f878b342f9e44bec08cb9ac00b4ce57e98316f030194a225fac89fb","spring.rabbitmq.password":"17fcf0ae5b8c5cf87de6875b699be4a1746dd493a99d926c7a26a68c422117ef"}}]}
+
+===== START eureka, auth-server, gateway, then the four microservices =====
+  eureka Started:    1
+  auth-server Started: 1
+  gateway(8443) Started: 1
+  product-service Started: 1  401-from-config: 0
+  review-service Started: 1  401-from-config: 0
+  recommendation-service Started: 1  401-from-config: 1
+  product-composite-service Started: 1  401-from-config: 0
+
+  --- which ports are actually bound ---
+    :7000
+    :7001
+    :7002
+    :7003
+    :8443
+    :8761
+    :8888
+    :9999
+
+===== THE BOOK'S OWN SUITE =====
+  test-em-all.bash PORT default (read from the script, not assumed):
+    : ${PORT=8443}
+Start Tests: Wed Nov 11 04:36:59 UTC 2026
+HOST=localhost
+PORT=8443
+Wait for: curl -k https://localhost:8443/actuator/health... , retry #1 , retry #2 , retry #3 , retry #4 , retry #5 , retry #6 , retry #7 , retry #8 , retry #9 , retry #10 , retry #11 , retry #12 , retry #13 , retry #14 , retry #15 , retry #16 , retry #17 , retry #18 , retry #19 , retry #20 , retry #21 , retry #22 , retry #23 , retry #24 , retry #25 , retry #26 , retry #27 , retry #28 , retry #29 , retry #30 , retry #31 , retry #32 , retry #33 , retry #34 , retry #35 , retry #36 , retry #37 , retry #38 , retry #39 , retry #40 , retry #41 , retry #42 , retry #43 , retry #44 , retry #45 , retry #46 , retry #47 , retry #48 , retry #49 , retry #50 , retry #51 , retry #52 , retry #53 , retry #54 , retry #55 , retry #56 , retry #57 , retry #58 , retry #59 , retry #60 , retry #61 , retry #62 , retry #63 , retry #64 , retry #65 , retry #66 , retry #67 , retry #68 , retry #69 , retry #70 , retry #71 , retry #72 , retry #73 , retry #74 , retry #75 , retry #76 , retry #77 , retry #78 , retry #79 , retry #80 , retry #81 , retry #82 , retry #83 , retry #84 , retry #85 , retry #86 , retry #87 , retry #88 , retry #89 , retry #90 , retry #91 , retry #92 , retry #93 , retry #94 , retry #95 , retry #96 , retry #97 , retry #98 , retry #99  Give up
+
+===== CROSS-SERVICE AGGREGATION THROUGH EXTERNALISED CONFIG =====
+
+    /product-composite/1 -> HTTP=401
+===== SERVICE DISCOVERY (eureka still wired) =====

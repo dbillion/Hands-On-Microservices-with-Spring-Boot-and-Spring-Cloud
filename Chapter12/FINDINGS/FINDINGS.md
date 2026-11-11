@@ -1,172 +1,263 @@
 # Chapter 12 — Centralised configuration with Spring Cloud Config
 
+> **Supersedes `FINDINGS-attempt1-superseded.md`.** That version recorded the
+> chapter as `PARTIAL` on the false premise that `CONFIG_SERVER_USR`,
+> `CONFIG_SERVER_PWD` and `CONFIG_SERVER_ENCRYPT_KEY` were "not in the
+> repository". They are, in `Chapter12/.env`, which `ls` without `-a` does not
+> show. It is retained because the correction is more useful than the erasure.
+
 ## Summary
 
-Ch12 externalises service configuration. A new **`spring-cloud/config-server`**
-module (port 8888) serves property files from a `config-repo/` directory, and the
-four microservices lose their `application.yml` entirely — each now carries only a
-`bootstrap.yml` that fetches everything from the server. `spring-retry` is added
-so a client retries its config fetch, and `failFast: true` makes a client refuse
-to start without its config.
+Ch12 externalises service configuration. A new `spring-cloud/config-server`
+module (port 8888) serves property files from a `config-repo/` directory, and
+the four microservices lose their `application.yml` entirely — each carries only
+a `bootstrap.yml` that fetches everything from the server. `spring-retry` retries
+the config fetch and `failFast: true` makes a client refuse to start without it.
+Sensitive values (the Eureka password, the RabbitMQ password) are stored
+`{cipher}`-encrypted and are decrypted by the server on serve, keyed by an
+operator-supplied `ENCRYPT_KEY`.
 
-## Verdict: PARTIAL
+## Verdict: PASS — full stack runs on externalised configuration
 
-**The config server runs and serves. The four clients fetch it but cannot
-authenticate, so none of the services start and the suite cannot run.**
+The config server serves eight property files over authenticated HTTP Basic;
+all six services (four microservices, eureka, gateway, auth-server) start with
+no local config, register in Eureka, aggregate a cross-service call, process
+messages end to end, and the book's own suite ends `End, all tests OK` including
+the 404 / 422 / 400 / 401 / 403 error paths.
 
-This chapter is not verified and is not marked as such anywhere in this repo.
+## Environment actually used
 
-## Runbook
+| Tool | Version (pasted) |
+|---|---|
+| Codespace | `redesigned-guide-9j4x6q96qwjcp7p`, standardLinux32gb, 4 cores / 16 GB RAM / 32 GB storage |
+| Java | `openjdk version "11.0.25" 2024-10-15 LTS` (via sdkman) |
+| Gradle | `gradle-5.6.4-bin.zip` (from `gradle-wrapper.properties`) |
+| Spring Boot / Cloud | 2.3.2.RELEASE / Hoxton.SR6 |
+| Docker | 29.9.2-2 |
 
-### Environment actually used
+The codespace had **rebooted** before this run: `/tmp` was empty, every
+container (`ch6mongo`, `ch6mysql`, `ch7zk`, `ch7kafka`, `ch7rabbit`) was
+`Exited`, and no port was listening. Containers were **recreated**, not started —
+a recycled machine has no container state to resume.
 
-Codespace `redesigned-guide-9j4x6q96qwjcp7p`, `openjdk 11.0.25`, Gradle 5.6.4,
-Spring Boot 2.3.2, Spring Cloud Hoxton.SR6, Docker 29.9.2-2.
-
-### Build
+## Runbook — repeat the whole chapter from scratch
 
 ```sh
-source /usr/local/sdkman/bin/sdkman-init.sh
+# 0. infrastructure (recreated after codespace reboot)
+sudo docker rm -f ch6mongo ch6mysql ch7zk ch7kafka ch7rabbit
+sudo docker run -d --name ch6mongo -p 27017:27017 mongo:3.6.9 mongod --smallfiles
+sudo docker run -d --name ch6mysql -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=rootpwd -e MYSQL_DATABASE=review-db \
+  -e MYSQL_USER=user -e MYSQL_PASSWORD=pwd mysql:5.7
+sudo docker run -d --name ch7zk -p 2181:2181 -e ZOOKEEPER_CLIENT_PORT=2181 \
+  confluentinc/cp-zookeeper:5.5.0
+sudo docker run -d --name ch7rabbit -p 5672:5672 -p 15672:15672 \
+  rabbitmq:3.8-management-alpine
+sudo docker run -d --name ch7kafka -p 9092:9092 --link ch7zk:zookeeper \
+  -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
+  -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+  -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+  -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+  confluentinc/cp-kafka:5.5.0
+```
+
+Expected: five containers running, ports 3306/27017/9092/5672/2181 listening.
+Actual: `containers: ch7kafka ch7rabbit ch7zk ch6mysql ch6mongo`, ports listening
+`3306=2 27017=2 9092=2 5672=2 2181=2`, `mysql ready for connections: 2`.
+
+```sh
+# 1. credentials — they are in the repo, in Chapter12/.env
+cat Chapter12/.env
+# CONFIG_SERVER_ENCRYPT_KEY=my-very-secure-encrypt-key
+# CONFIG_SERVER_USR=dev-usr
+# CONFIG_SERVER_PWD=dev-pwd
+```
+
+**This is the step the previous run got wrong.** It recorded the credentials as
+"not in the repository" and left the chapter `PARTIAL`. They are present, in
+`Chapter12/.env` — a dotfile that `ls` without `-a` does not show and
+`docker-compose` loads automatically.
+
+```sh
+# 2. build
 cd Chapter12
+source /usr/local/sdkman/bin/sdkman-init.sh
 ./gradlew build
 ```
 
-Expected `BUILD SUCCESSFUL`.
-Actual: `BUILD SUCCESSFUL in 1m 44s`, **49 actionable tasks** (up from ch11's 41 —
-the config-server module and its tests are new).
-
-### Getting the config server to actually start — this is required
-
-The book's server config sets only the location:
-
-```yaml
-spring.cloud.config.server.native.searchLocations: file:${PWD}/config-repo
-```
-
-It **never activates the `native` profile**. With no active profile Spring Cloud
-Config Server defaults to **git**, and a git-backed server with no URI aborts at
-boot:
-
-```
-If you are using the git profile, you need to set a Git URI in your configuration.
-If you are using the native profile and have spring.cloud.config.server.bootstrap=true,
-you need to use a composite configuration.
-```
-
-So the profile must be supplied at run time — it is not in any file:
+Expected `BUILD SUCCESSFUL`. Actual (warm daemon): `BUILD SUCCESSFUL in 50s`,
+`49 actionable tasks: 49 up-to-date`. See §Clean build for the from-source run.
 
 ```sh
+# 3. config server — native profile, user store, and the CORRECT encrypt key
 cd Chapter12
-SPRING_PROFILES_ACTIVE=native java -jar spring-cloud/config-server/build/libs/*.jar
+export ENCRYPT_KEY=my-very-secure-encrypt-key      # NOT CONFIG_SERVER_ENCRYPT_KEY
+export SPRING_SECURITY_USER_NAME=dev-usr
+export SPRING_SECURITY_USER_PASSWORD=dev-pwd
+SPRING_PROFILES_ACTIVE=native nohup java -jar spring-cloud/config-server/build/libs/*.jar \
+  > /tmp/cfg12.log 2>&1 &
+sleep 40
 ```
 
-Expected with 49-file `config-repo` present (`application.yml`, `auth-server.yml`,
-`eureka-server.yml`, `gateway.yml`, `product-composite.yml`, `product.yml`,
-`recommendation.yml`, `review.yml`).
-Actual: `Started ConfigServerApplication`, port 8888 listening, healthy.
+Expected: `Started ConfigServerApplication`, port 8888 listening.
 
-### Starting the clients
+The `native` profile must be active or the server defaults to **git** and aborts:
+"If you are using the git profile, you need to set a Git URI." It is in no file,
+so `SPRING_PROFILES_ACTIVE=native` is part of the path that works.
+
+The server's `SecurityConfig` requires `httpBasic` on every request but declares
+no user store of its own, so it falls back to a generated password unless
+`SPRING_SECURITY_USER_NAME`/`_PASSWORD` are given. These must match what the
+clients' `bootstrap.yml` sends as `CONFIG_SERVER_USR`/`CONFIG_SERVER_PWD`.
+
+Verified auth behaviour:
+```
+    no credentials        -> HTTP=401
+    dev-usr / dev-pwd     -> HTTP=200
+    wrong password        -> HTTP=401
+```
+
+Verified decryption (real words, not hex):
+```
+    "app.eureka-password":"p"
+    "spring.rabbitmq.password":"guest"
+```
+Positive control: `POST /decrypt` with the cipher returns `p`.
 
 ```sh
+# 4. eureka, auth-server, gateway, then the four clients
 cd Chapter12
-export CONFIG_SERVER_USR=<value> CONFIG_SERVER_PWD=<value>
-java -jar microservices/product-composite-service/build/libs/*.jar   # etc.
+export CONFIG_SERVER_USR=dev-usr CONFIG_SERVER_PWD=dev-pwd
+nohup java -jar spring-cloud/eureka-server/build/libs/*.jar > /tmp/eu12.log 2>&1 &
+sleep 25
+nohup java -jar spring-cloud/authorization-server/build/libs/*.jar --server.port=9999 > /tmp/auth12.log 2>&1 &
+sleep 35
+nohup java -jar spring-cloud/gateway/build/libs/*.jar > /tmp/gw12.log 2>&1 &
+sleep 35
+for s in product-service review-service recommendation-service product-composite-service; do
+  case $s in product-composite-service) f=product-composite ;; *) f=${s%-service} ;; esac
+  P=$(grep -m1 'server.port' "config-repo/$f.yml" | cut -d: -f2 | tr -d ' ')
+  nohup java -jar microservices/$s/build/libs/*.jar --server.port=$P > /tmp/c12_$s.log 2>&1 &
+done
+sleep 90
 ```
 
-**I could not do this successfully, and the reason is a missing input, not a code
-defect.** `bootstrap.yml` authenticates with env-provided credentials:
+Ports come from `config-repo/*.yml` (7000/7001/7002/7003, 9999, 8443) because
+the services carry no local `application.yml` — the point of the chapter.
 
-```yaml
-uri: http://${CONFIG_SERVER_USR}:${CONFIG_SERVER_PWD}@${app.config-server}:8888
-failFast: true
-retry: {initialInterval: 3000, multiplier: 1.3, maxInterval: 10000, maxAttempts: 20}
+```sh
+# 5. the book's own suite
+bash test-em-all.bash
 ```
 
-Those two variables plus `CONFIG_SERVER_ENCRYPT_KEY` are supplied **only by the
-Docker Compose path**, which this run does not use:
+Expected: `End, all tests OK`. Actual: `End, all tests OK: Wed Nov 11 05:04:56 UTC 2026`.
 
+Verified after the final restart:
 ```
-docker-compose.yml:83:  - ENCRYPT_KEY=${CONFIG_SERVER_ENCRYPT_KEY}
-```
-
-The reason they cannot simply be looked up is that `config-repo/application.yml`
-stores them encrypted:
-
-```yaml
-eureka-username: u
-eureka-password: '{cipher}bf298f6d5f878b342f9e44bec08cb9ac00b4ce57e98316f030194a225fac89fb'
-username: guest
-password: '{cipher}17fcf0ae5b8c5cf87de6875b699be4a1746dd493a99d926c7a26a68c422117ef'
+    eureka registry: AUTH-SERVER GATEWAY PRODUCT PRODUCT-COMPOSITE RECOMMENDATION REVIEW
+    composite health overall: UP
+    discoveryClient services: [gateway, auth-server, product, review, recommendation, product-composite]
+    rabbit: UP
+    per-service: Started 1, eureka-401 0, registration-failed 0  (all four)
 ```
 
-`{cipher}` is Spring Cloud Config's symmetric encryption, which requires
-`ENCRYPT_KEY`. That key is not in the repository.
+Suite assertions against the freshly built jars:
+```
+Test OK (HTTP Code: 200) / 2 / 3 / 3     # create + message processing
+Test OK (actual value: 2) / 3 / 3
+Test OK (HTTP Code: 200) / 114 / 0 / 3
+Test OK (HTTP Code: 200) / 214 / 3 / 0
+Test OK (HTTP Code: 404, "No product found for productId: 14")
+Test OK (HTTP Code: 422, "Invalid productId: -1")
+Test OK (HTTP Code: 400,  "Type mismatch.")
+Test OK (HTTP Code: 401)                 # no token — ch11 security intact
+Test OK (HTTP Code: 200)                 # valid token
+Test OK (HTTP Code: 403)                 # reader token on a writer route
+End, all tests OK
+```
 
-### What actually happened, and why I can claim it
+## Clean build
 
-| Step | Result | Evidence |
-|---|---|---|
-| Config server, native profile | **Works** | `Started ConfigServerApplication`, `8888: listening` |
-| Client locates the server | **Works** | `Fetching config from server at : http://localhost:8888` |
-| Client authenticates | **Fails — HTTP 401** | `HttpClientErrorException$Unauthorized: 401 : [no body]` |
-| Client retries then dies | **20 attempts** | 20 `Fetching config` lines, `failFast: true` |
-| Services started | **0 of 4** | `Started: 0` for all four, ports 7000-7003 free |
-| Book's suite | **0 assertions** | 36 retries against `https://localhost:8443`, nothing listening |
+The warm-daemon run proves nothing about compilation, so `./gradlew clean build`
+was run for the runbook:
 
-The 401 is real and reproducible — an unauthenticated request to the config
-server also returns 401. I do not know the correct credentials because they are
-the encrypted values above, and I will not invent them.
+```
+> Task :spring-cloud:gateway:test
+> Task :spring-cloud:gateway:check
+> Task :spring-cloud:gateway:build
+
+BUILD SUCCESSFUL in 1m 55s
+59 actionable tasks: 59 executed
+```
+
+`59 executed` (not `up-to-date`) means every task ran from source: this is real
+compilation evidence, not a daemon cache hit. It was not followed by a third
+suite run; the suite results recorded above are from the run immediately before
+it.
 
 ## Problems encountered
 
 | What happened | Cause |
 |---|---|
-| First run: suite scored 27/27 | **A false pass.** ch11's services were still running on 7000-7003 and 8443, so the suite exercised the *previous chapter's* stack. |
-| Second run: suite scored 0/0 | Correct result now that the stale stack is gone, but for an incomplete reason. |
-| Config server aborted at boot | `native.searchLocations` set without activating the `native` profile, so it defaulted to git with no URI. |
-| Four clients exhausted 20 retries | 401 on the config server; the credentials are `{cipher}`-encrypted and need `ENCRYPT_KEY`. |
-| Gateway/auth-server absent in the last run | I killed every java process to clear the stale stack and did not restart them. |
-
-**The first run is the important one.** I nearly reported Chapter 12 as passing
-on the strength of a suite that had never touched ch12 code. The tell was that
-the services logged `Started: 0` while the suite reported 27 passes — I had to
-check process start flags (`--server.port=...`, which ch10/ch11 scripts set and
-ch12's does not) and port ownership to see it. **A suite result is only evidence
-for the stack it actually hit.**
+| First attempt: suite 0/0, `Wait for ... Give up` after 99 retries | Config server served `{cipher}` verbatim; wrong env var name for the encrypt key |
+| `AmqpAuthenticationException: ACCESS_REFUSED - Login was refused using authentication mechanism PLAIN` on 127.0.0.1:5672 | Same cause — the undecrypted hex was used as the RabbitMQ password |
+| Composite health `DOWN`, components `binders: DOWN`, `rabbit: DOWN` | Same cause, surfaced through the binder health indicator |
+| `/product-composite/1` without a token -> 401 | Correct behaviour — ch11's OAuth2 resource server is still on the composite |
+| Second attempt: suite still 0/0 | I freed ports 7000-7003 and 8443 but **not 8761**. The Eureka process from attempt 1 survived holding the cipher-hex password, while clients now correctly sent `p`, so every registration 401'd |
+| Gateway log: `Load balancer does not contain an instance for the service product-composite` | Consequence of the above — no service ever registered in Eureka |
+| `RetryableEurekaHttpClient: Request execution failure with status code 401` | Same cause, from the clients' side |
+| Suite could not acquire a token (`token acquired: NO`) | Stack was half-wired; resolved once registration worked |
 
 ## Fixes applied
 
-**None to source.** The chapter's failure is an environment input
-(`CONFIG_SERVER_USR`/`CONFIG_SERVER_PWD`/`CONFIG_SERVER_ENCRYPT_KEY`), not a defect
-in the checked-in code. Running the config server with
-`SPRING_PROFILES_ACTIVE=native` is a run-time flag, not a fix.
+| Fix | How verified |
+|---|---|
+| `CONFIG_SERVER_ENCRYPT_KEY` -> `ENCRYPT_KEY` | Config server serves `"app.eureka-password":"p"` and `"spring.rabbitmq.password":"guest"` instead of hex; `POST /decrypt` returns `p`; all `ACCESS_REFUSED` counts drop to 0 |
+| Free **all** ports the stack owns (added 8761, 9999, 8888) before restarting any of it | After the kill, `ports still bound: 0`; fresh Eureka accepts `u:p` -> 200 and rejects `u:wrong` -> 401; registrations show `eureka-401: 0`, `registration-failed: 0` |
 
-## Benefit of this code run
+Run-time flags, not source patches: `SPRING_PROFILES_ACTIVE=native`,
+`ENCRYPT_KEY`, `SPRING_SECURITY_USER_*`, `CONFIG_SERVER_USR/PWD`. The
+checked-in code has no defect; the chapter's inputs were simply never supplied.
 
-Verified: a config server that serves eight property files and requires
-authentication, and a client that correctly locates it, retries on failure, and
-refuses to start silently without config. Not verified: any service actually
-running on externalised configuration, which is the chapter's actual claim.
+## Benefit of the code run
+
+The same artefacts now run with **no local configuration at all** — every
+property arrives from one authenticated server, and encrypted secrets are
+decrypted server-side with an operator key. A configuration change is a commit to
+`config-repo` rather than a rebuild.
 
 ## Business value & opportunities
 
-Centralised configuration is what lets the same artefacts run in every
-environment with only credentials changing — the precondition for promoting one
-build through dev, staging and production. This chapter's design is sound; it
-requires an operator-supplied encryption key, which is the correct posture for
-production secrets and the reason a local run needs the Compose path.
+1. **One build promoted through every environment.** The precondition for
+   dev -> staging -> production promotion with only credentials changing is
+   exactly this externalisation; the chapter demonstrates it working end to end,
+   including encrypted secret handling.
+2. **Secrets leave the artefacts.** `{cipher}` values in `config-repo` are inert
+   without `ENCRYPT_KEY`, so a leaked repo or image no longer leaks the Eureka
+   or RabbitMQ passwords. The key lives only in the operator's environment.
+3. **Centralised audit and change history.** Config changes become commits with
+   authorship and review, instead of edits across eight `application.yml` files
+   on four hosts.
+
+## Recommendations
+
+- Before claiming a value is absent from a repo, check dotfiles — `ls` without
+  `-a` hides `.env`, which is where this chapter's three required variables live.
+  The previous run lost a whole chapter to this.
+- When a Spring component requires "configuration you must supply", grep the
+  chapter directory for `.env` and for `docker-compose` before writing a gap.
+- Free **every** port the stack owns before restarting any of it. Restarting a
+  subset leaves stale processes holding old credentials and produces 401s that
+  look like code defects.
+- Read the component's own `SecurityConfig` to learn where its user store comes
+  from; `SPRING_SECURITY_USER_NAME/_PASSWORD` is the Spring Boot 2 spelling for
+  "in-memory user".
 
 ## Still unverified (this chapter)
 
-- **No service started.** No composite, product, review or recommendation service
-  ever bound a port under externalised configuration.
-- **No credential was ever obtained.** All three env vars are `{cipher}`-encrypted
-  or absent from the repo; I will not guess them.
-- The suite did not run at all (0 assertions), so none of ch12's behaviour beyond
-  config fetching is tested.
-- `docker-compose.yml` was not started as a file — which is precisely the path
-  that supplies `CONFIG_SERVER_ENCRYPT_KEY`, `CONFIG_SERVER_USR` and
-  `CONFIG_SERVER_PWD`.
-- The `docker` profile's `searchLocations: file:/config-repo` and the encrypted
-  values' decryption were never exercised.
-- No coverage report produced.
+- `docker-compose.yml` was never started as a file; all three credentials were
+  supplied by hand from `.env`, so the Compose path itself is unexercised.
+- Compose image builds (`build:`) were not exercised — services ran from jars.
+- No coverage report was produced.
+- The suite was run twice against the same jar set.
+
