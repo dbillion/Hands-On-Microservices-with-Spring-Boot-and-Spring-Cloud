@@ -1,0 +1,46 @@
+===== CH15: the books own nginx manifests, applied to a real minikube cluster =====
+--- 1. the manifests (unmodified, from kubernetes/first-attempts/) ---
+  nginx-deployment.yaml:kind: Deployment
+  nginx-deployment.yaml:  replicas: 1
+  nginx-deployment.yaml:        image: nginx:latest
+  nginx-service.yaml:kind: Service
+  nginx-service.yaml:  type: NodePort
+  nginx-service.yaml:      nodePort: 30080
+--- 2. apply ---
+deployment.apps/nginx-deploy unchanged
+service/nginx-service unchanged
+--- 3. rollout ---
+deployment "nginx-deploy" successfully rolled out
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deploy   1/1     1            1           2m46s
+--- 4. pods ---
+NAME                            READY   STATUS    RESTARTS   AGE     IP           NODE       NOMINATED NODE   READINESS GATES
+nginx-deploy-7cc8ff4856-9bf2p   1/1     Running   0          2m46s   10.244.0.3   minikube   <none>           <none>
+--- 5. service + endpoints ---
+NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+nginx-service   NodePort   10.104.42.210   <none>        80:30080/TCP   2m46s
+NAME                  ADDRESSTYPE   PORTS   ENDPOINTS    AGE
+nginx-service-dg67n   IPv4          80      10.244.0.3   2m46s
+--- 6. in-cluster reachability ---
+pod/curl-probe created
+curl: (2) no URL specified
+curl: try 'curl --help' or 'curl --manual' for more information
+sh: http://nginx-service/: not found
+curl: (2) no URL specified
+curl: try 'curl --help' or 'curl --manual' for more information
+sh: http://10.244.0.3/: not found
+<!DOCTYPE html>
+<html>
+--- 7. nodeip reachability from the host ---
+  minikube node ip: 192.168.49.2
+  http://192.168.49.2:30080/ HTTP=200
+  body: Welcome to nginx!
+--- 8. minikube service url ---
+http://192.168.49.2:30080
+--- 9. cluster ---
+NAME       STATUS   ROLES           AGE    VERSION
+minikube   Ready    control-plane   4m4s   v1.37.0
+minikube
+type: Control Plane
+host: Running
+kubelet: Running

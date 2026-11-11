@@ -96,7 +96,7 @@ The symptom implicates the composite; the cause is a missing container.
 | 12 | Centralised configuration via Spring Cloud Config Server | yes | done, suite all OK + 6/6 registered in Eureka | Chapter12/FINDINGS/FINDINGS.md | f2cd131 |
 | 13 | Resilience: Resilience4j circuit breaker and retry | yes | done, book suite 51/51 incl full CLOSED->OPEN->HALF_OPEN->CLOSED breaker test | Chapter13/FINDINGS/FINDINGS.md | 9a432bc |
 | 14 | Distributed tracing: Sleuth + Zipkin over RabbitMQ | yes | done, book suite 51/51 + Zipkin shows 29 multi-service traces with 25 correlated client/server span ids | Chapter14/FINDINGS/FINDINGS.md | 3e7ec37 |
-| 15 | | yes | todo | | |
+| 15 | Running the landscape on Kubernetes | yes | done, minikube v1.37.0 + book own nginx manifests: deploy 1/1, EndpointSlice populated, host NodePort 30080 -> 200 Welcome to nginx | Chapter15/FINDINGS/FINDINGS.md | (pending hash) |
 | 16 | | yes | todo | | |
 | 17 | | yes | todo | | |
 | 18 | | yes | todo | | |
