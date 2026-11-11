@@ -1,0 +1,21 @@
+===== 0. THE BOOK'S OWN TOKEN RECIPE =====
+  269:ACCESS_TOKEN=$(curl -k https://writer:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=magnus -d password=password -s | jq .access_token -r)
+
+===== 1. ACQUIRE A TOKEN FROM THE GATEWAY =====
+pod/curl-probe created
+    token length: 594
+    token prefix: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ
+  --- raw (first 120 chars) ---
+  {"access_token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtYWdudXMiLCJleHAiOjIzOTQzODQ5MTIsImF1dGhvcml0aWVzIjpbIl
+  --- composite with the token ---
+  {"timestamp":"2026-11-11T08:15:13.263964Z","path":"/product-composite/1","message":"No product found for productId: 1","error":"Not Found","status":404}
+
+===== 2. THE COMPOSITE'S OWN LOG: did it resolve the three services by k8s name? =====
+
+===== 3. ZIPKIN: are traces being produced (ch14 dependency)? =====
+  
+
+===== 4. FINAL STATE =====
+  pods 1/1: 11 of 12
+  disk 6.7G avail, 78% used
+  host mem: 8GB avail

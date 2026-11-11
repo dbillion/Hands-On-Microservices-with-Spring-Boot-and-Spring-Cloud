@@ -13,21 +13,57 @@ of registry lookup. The chapter also keeps the ch12 configuration sourcing
 `config-client-credentials` as a Secret so the config-server credentials do not
 live in a manifest.
 
-## Verdict: PARTIAL — disk reclaimed, config-server 401 root-caused and fixed, 6 pods Ready; 5 microservices still crash-loop
-
-The blocker was not the code — it was two things in sequence: the codespace disk
-had filled to 100 %, and then a credential-name defect that only became visible
-once there was room to run.
+## Verdict: PASS — the whole stack runs on Kubernetes, Eureka gone, end-to-end request served
 
 | Layer reached | State | Evidence |
 |---|---|---|
-| Disk | **Freed** | 279 MB → **6.7 GB** avail, 100 % → 78 % used, cluster survived intact |
-| config-server serves real config | **Verified** | `/product/default` returns `file:/config-repo/product.yml (document #0)`; `/product/docker` returns the docker profile |
-| `ENCRYPT_KEY` works | **Verified** | `POST /decrypt` of the stored cipher returns **`guest`** |
-| config-server accepts clients | **Verified** | `dev-usr:dev-pwd` now returns 200 |
-| Stateful deps + edge | **Ready** | mysql, mongodb, rabbitmq, zipkin-server, **auth-server** all `1/1` |
-| **Microservices** | **crash-looping** | gateway, product, product-composite, recommendation, review `CrashLoopBackOff` |
-| **End-to-end request** | **NOT reached** | every in-cluster call returns `HTTP 000` |
+| Disk | **Freed** | 279 MB → 6.7 GB, 100 % → 78 % used, cluster survived every prune |
+| config-server | **Ready** | `1/1`; `/product/default` → 200 from `file:/config-repo/product.yml (document #0)` |
+| `ENCRYPT_KEY` | **Verified** | `POST /decrypt` of the stored cipher → **`guest`** |
+| Config credentials | **Fixed** | `SPRING_SECURITY_USER_NAME`/`_PASSWORD` — the names the compose file uses, not `CONFIG_SERVER_USR` |
+| Memory limits | **Fixed** | book's `350Mi` → `900Mi`; the OOMKills stopped |
+| **All 11 pods** | **`1/1 Running`, `restarts=0`** | `kubectl get pods` |
+| Gateway TLS | **Verified** | `GET https://gateway/actuator/info` → **200** |
+| OAuth | **Verified** | gateway `POST /oauth/token` with `writer:secret` + `magnus/password` → **594-char JWT, `eyJhbG…`** |
+| Composite, authorised | **Verified** | the book's own 404: `{"path":"/product-composite/1","message":"No product found for productId: 1","status":404}` |
+| Empty-data, not routing | **Confirmed** | `/product/213` also 404s directly; MongoDB volume holds WiredTiger files only, unseeded |
+| Eureka removal | **Genuine** | composite's `build.gradle` has no eureka-client; no `eureka` key under `config-repo` |
+
+The last two rows matter to reading the 404 correctly: a request that was
+authorised, routed through the gateway and answered with the composite's *own*
+business message is a working path. It returned 404 because the cluster's MongoDB
+is fresh and unseeded — not because discovery failed.
+
+## The memory limit is the finding of this chapter
+
+Every crash-looping pod died with `reason=OOMKilled, exitCode=137`, roughly **10
+seconds into startup**, while the node itself reported
+`KubeletHasSufficientMemory` and `KubeletHasNoDiskPressure`. That combination —
+node fine, pod dead — is a per-container cgroup limit, and the book's manifests
+set `resources.limits.memory: 350Mi` on all eleven services.
+
+A Spring Boot 2.3.2 + Spring Cloud Hoxton 2.2.3 stack on JDK 12 does not fit in
+350 Mi: metaspace, code cache, thread stacks, Netty direct buffers and GC
+structures sit on top of the heap, and the gateway loading its full route set plus
+`SPRING_PROFILES_ACTIVE=docker` pushes past it during startup. The gateway managed
+to reach `Started GatewayApplication in 8.82 seconds` and was killed seconds later,
+which is why this reads as a probe fault until the last state is read.
+
+Raising the six Spring services from `350Mi` to `900Mi` with
+`kubectl set resources deployment/<d> --limits=memory=900Mi` took all eleven pods
+to `1/1` with `restarts=0` and they stayed up across a 5-minute window and both
+probe cycles.
+
+**Trade it honestly:** `900Mi` × 6 + `350Mi` × 4 + `512Mi` ≈ 6.9 GB of requests
+against a `--memory=7g` node, so the node is at ~98 % of its limit. It runs, but
+there is no headroom for another chapter's pods — Ch17–20 would each have to be
+run by stopping the previous chapter's stack, or with a larger minikube.
+
+**Diagnostic rule this earns:** when a pod crash-loops, read
+`status.containerStatuses[].lastState.terminated` *before* reading its log or its
+probe event. `reason=OOMKilled exitCode=137` identifies the cause outright, and
+it is invisible in the events list except as a misleading
+`connection reset by peer` from a probe against a process that was already dead.
 
 ## Environment actually used
 

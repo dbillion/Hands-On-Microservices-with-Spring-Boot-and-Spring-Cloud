@@ -1,0 +1,59 @@
+===== 0. THE DEFECT, STATED =====
+  book manifest: resources.limits.memory: 350Mi  (every service)
+  observed: OOMKilled exitCode=137, restarts=8-9, dying ~10s into startup
+
+===== 1. RAISE THE LIMITS =====
+    deployment.apps/gateway resource requirements updated
+    deployment.apps/product resource requirements updated
+    deployment.apps/product-composite resource requirements updated
+    deployment.apps/recommendation resource requirements updated
+    deployment.apps/review resource requirements updated
+    deployment.apps/auth-server resource requirements updated
+  NAME                LIMITS
+  auth-server         map[memory:900Mi]
+  config-server       map[memory:350Mi]
+  gateway             map[memory:900Mi]
+  mongodb             map[memory:350Mi]
+  mysql               map[memory:350Mi]
+  product             map[memory:900Mi]
+  product-composite   map[memory:900Mi]
+  rabbitmq            map[memory:350Mi]
+  recommendation      map[memory:900Mi]
+  review              map[memory:900Mi]
+  zipkin-server       map[memory:512Mi]
+
+===== 2. LET THEM BOOT (staggered by the kubelet) =====
+  disk: 6.7G avail
+  6.7G avail, 78% used
+  host mem: 7GB used, 8GB avail
+  auth-server-856584c7c5-vp9b7 1/1 Running restarts=0
+  config-server-7765dbf766-n7452 1/1 Running restarts=0
+  gateway-64cd887ccd-v5f45 1/1 Running restarts=0
+  mongodb-868c84564-z54sp 1/1 Running restarts=0
+  mysql-6796566749-6f75z 1/1 Running restarts=0
+  product-76d49c49db-n75tp 1/1 Running restarts=0
+  product-composite-7fd75c6694-rdgs4 1/1 Running restarts=0
+  rabbitmq-7c5c5cc564-fzwg6 1/1 Running restarts=0
+  recommendation-6c579c994c-fkrg7 1/1 Running restarts=0
+  review-7b5f86f598-88nz2 1/1 Running restarts=0
+  zipkin-server-58bcc5cc9c-mhsdw 1/1 Running restarts=5
+
+===== 3. STILL OOMKILLED, OR BOOTING? =====
+  auth-server-856584c7c5-vp9b7: ready=True now=['running']
+  config-server-7765dbf766-n7452: ready=True now=['running']
+  gateway-64cd887ccd-v5f45: ready=True now=['running']
+  mongodb-868c84564-z54sp: ready=True now=['running']
+  mysql-6796566749-6f75z: ready=True now=['running']
+  product-76d49c49db-n75tp: ready=True now=['running']
+  product-composite-7fd75c6694-rdgs4: ready=True now=['running']
+  rabbitmq-7c5c5cc564-fzwg6: ready=True now=['running']
+  recommendation-6c579c994c-fkrg7: ready=True now=['running']
+  review-7b5f86f598-88nz2: ready=True now=['running']
+  zipkin-server-58bcc5cc9c-mhsdw: ready=True now=['running'] lastTerm=OOMKilled
+
+===== 4. THE GATEWAY'S OWN LOG — did it get past Netty this time? =====
+
+===== 5. END-TO-END RETRY =====
+pod/curl-probe created
+  gateway_health_HTTPS=200
+  composite_product1=401

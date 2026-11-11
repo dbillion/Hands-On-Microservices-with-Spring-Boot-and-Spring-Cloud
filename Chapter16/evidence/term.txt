@@ -1,0 +1,55 @@
+===== 1. LAST STATE OF EACH CRASH-LOOPING POD =====
+  auth-server-674f85f5f5-xc49w:
+    reason=OOMKilled exitCode=137 startedAt=2026-11-11T07:54:15Z finishedAt=2026-11-11T08:03:45Z msg=
+    restartCount=3
+  config-server-7765dbf766-n7452: no lastState.terminated (state=['running'])
+  gateway-5b7f4d79f8-7wgq5:
+    reason=OOMKilled exitCode=137 startedAt=2026-11-11T08:03:20Z finishedAt=2026-11-11T08:03:31Z msg=
+    restartCount=8
+  mongodb-868c84564-z54sp: no lastState.terminated (state=['running'])
+  mysql-6796566749-6f75z: no lastState.terminated (state=['running'])
+  product-684bc94c4b-qn92z:
+    reason=OOMKilled exitCode=137 startedAt=2026-11-11T08:07:26Z finishedAt=2026-11-11T08:07:36Z msg=
+    restartCount=9
+  product-composite-7dcf8cf65d-lx5r5:
+    reason=OOMKilled exitCode=137 startedAt=2026-11-11T08:07:55Z finishedAt=2026-11-11T08:08:07Z msg=
+    restartCount=9
+  rabbitmq-7c5c5cc564-fzwg6: no lastState.terminated (state=['running'])
+  recommendation-76cf86c47-mj5hf:
+    reason=OOMKilled exitCode=137 startedAt=2026-11-11T08:07:06Z finishedAt=2026-11-11T08:07:16Z msg=
+    restartCount=9
+  review-7db6b88d86-rssgg:
+    reason=OOMKilled exitCode=137 startedAt=2026-11-11T08:07:43Z finishedAt=2026-11-11T08:07:53Z msg=
+    restartCount=9
+  zipkin-server-58bcc5cc9c-mhsdw:
+    reason=OOMKilled exitCode=137 startedAt=2026-11-11T07:52:44Z finishedAt=2026-11-11T07:57:16Z msg=
+    restartCount=5
+
+===== 2. RESOURCE LIMITS: are 350Mi enough? =====
+  auth-server-674f85f5f5-xc49w: limits={'memory': '350Mi'}
+  config-server-7765dbf766-n7452: limits={'memory': '350Mi'}
+  gateway-5b7f4d79f8-7wgq5: limits={'memory': '350Mi'}
+  mongodb-868c84564-z54sp: limits={'memory': '350Mi'}
+  mysql-6796566749-6f75z: limits={'memory': '350Mi'}
+  product-684bc94c4b-qn92z: limits={'memory': '350Mi'}
+  product-composite-7dcf8cf65d-lx5r5: limits={'memory': '350Mi'}
+  rabbitmq-7c5c5cc564-fzwg6: limits={'memory': '350Mi'}
+  recommendation-76cf86c47-mj5hf: limits={'memory': '350Mi'}
+  review-7db6b88d86-rssgg: limits={'memory': '350Mi'}
+  zipkin-server-58bcc5cc9c-mhsdw: limits={'memory': '512Mi'}
+
+===== 3. IS THE METRICS API AVAILABLE NOW? =====
+error: Metrics API not available
+
+===== 4. MEMORY PRESSURE ON THE NODE? =====
+  Conditions:
+    Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+    ----             ------  -----------------                 ------------------                ------                       -------
+    MemoryPressure   False   Wed, 11 Nov 2026 08:07:53 +0000   Wed, 11 Nov 2026 06:14:45 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
+    DiskPressure     False   Wed, 11 Nov 2026 08:07:53 +0000   Wed, 11 Nov 2026 06:14:45 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+    PIDPressure      False   Wed, 11 Nov 2026 08:07:53 +0000   Wed, 11 Nov 2026 06:14:45 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
+    Ready            True    Wed, 11 Nov 2026 08:07:53 +0000   Wed, 11 Nov 2026 06:15:09 +0000   KubeletReady                 kubelet is posting ready status
+
+===== 5. DISK =====
+  6.7G avail, 78% used
+  mem 4GB used, 11GB avail

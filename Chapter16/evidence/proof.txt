@@ -1,0 +1,69 @@
+===== 1. THE COMPOSITE'S OWN LOG (pod product-composite-7fd75c6694-rdgs4) =====
+  2026-11-11 08:17:03.482  INFO [product-composite,,,] 1 --- [oundedElastic-9] c.c.c.ConfigServicePropertySourceLocator : Located environment: name=product-composite, profiles=[docker], label=null, version=null, state=null
+  2026-11-11 08:17:03.485 TRACE [product-composite,de386acc5accdecc,de386acc5accdecc,false] 1 --- [or-http-epoll-4] o.s.w.s.adapter.HttpWebHandlerAdapter    : [f1b8d94d-67] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:12.532 TRACE [product-composite,,,] 1 --- [or-http-epoll-1] o.s.w.s.adapter.HttpWebHandlerAdapter    : [94a8ed9c-68] HTTP GET "/actuator/info", headers={masked}
+  2026-11-11 08:17:12.536 TRACE [product-composite,e8c7497616744f7a,e8c7497616744f7a,false] 1 --- [or-http-epoll-1] o.s.w.s.adapter.HttpWebHandlerAdapter    : [94a8ed9c-68] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:13.326 TRACE [product-composite,,,] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [f2a9da81-69] HTTP GET "/actuator/health", headers={masked}
+  2026-11-11 08:17:13.344 TRACE [product-composite,7609d3a046cdb871,7609d3a046cdb871,false] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [f2a9da81-69] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:22.533 TRACE [product-composite,,,] 1 --- [or-http-epoll-3] o.s.w.s.adapter.HttpWebHandlerAdapter    : [b40c5333-70] HTTP GET "/actuator/info", headers={masked}
+  2026-11-11 08:17:22.537 TRACE [product-composite,edbdd3ba1b021d53,edbdd3ba1b021d53,false] 1 --- [or-http-epoll-3] o.s.w.s.adapter.HttpWebHandlerAdapter    : [b40c5333-70] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:23.326 TRACE [product-composite,,,] 1 --- [or-http-epoll-4] o.s.w.s.adapter.HttpWebHandlerAdapter    : [4731e75f-71] HTTP GET "/actuator/health", headers={masked}
+  2026-11-11 08:17:23.347 TRACE [product-composite,c433078fb5ff91c9,c433078fb5ff91c9,false] 1 --- [or-http-epoll-4] o.s.w.s.adapter.HttpWebHandlerAdapter    : [4731e75f-71] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:32.532 TRACE [product-composite,,,] 1 --- [or-http-epoll-1] o.s.w.s.adapter.HttpWebHandlerAdapter    : [9a94f355-72] HTTP GET "/actuator/info", headers={masked}
+  2026-11-11 08:17:32.537 TRACE [product-composite,595806144822d9c5,595806144822d9c5,false] 1 --- [or-http-epoll-1] o.s.w.s.adapter.HttpWebHandlerAdapter    : [9a94f355-72] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:33.328 TRACE [product-composite,,,] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [47de1939-73] HTTP GET "/actuator/health", headers={masked}
+  2026-11-11 08:17:33.352 TRACE [product-composite,9d48dabda76d1f5b,9d48dabda76d1f5b,false] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [47de1939-73] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:42.533 TRACE [product-composite,,,] 1 --- [or-http-epoll-3] o.s.w.s.adapter.HttpWebHandlerAdapter    : [593fc713-74] HTTP GET "/actuator/info", headers={masked}
+  2026-11-11 08:17:42.538 TRACE [product-composite,37f3ff1f2f1118e5,37f3ff1f2f1118e5,false] 1 --- [or-http-epoll-3] o.s.w.s.adapter.HttpWebHandlerAdapter    : [593fc713-74] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:43.327 TRACE [product-composite,,,] 1 --- [or-http-epoll-4] o.s.w.s.adapter.HttpWebHandlerAdapter    : [bff22f1a-75] HTTP GET "/actuator/health", headers={masked}
+  2026-11-11 08:17:43.344 TRACE [product-composite,79d920ba58028ea4,79d920ba58028ea4,false] 1 --- [or-http-epoll-4] o.s.w.s.adapter.HttpWebHandlerAdapter    : [bff22f1a-75] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:52.532 TRACE [product-composite,,,] 1 --- [or-http-epoll-1] o.s.w.s.adapter.HttpWebHandlerAdapter    : [bb054cdd-76] HTTP GET "/actuator/info", headers={masked}
+  2026-11-11 08:17:52.538 TRACE [product-composite,b5d31ef2d1bfa727,b5d31ef2d1bfa727,false] 1 --- [or-http-epoll-1] o.s.w.s.adapter.HttpWebHandlerAdapter    : [bb054cdd-76] Completed 200 OK, headers={masked}
+  2026-11-11 08:17:53.326 TRACE [product-composite,,,] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [e9ac3dfc-77] HTTP GET "/actuator/health", headers={masked}
+  2026-11-11 08:17:53.353 TRACE [product-composite,d6dd8d2ba0a61921,d6dd8d2ba0a61921,false] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [e9ac3dfc-77] Completed 200 OK, headers={masked}
+  2026-11-11 08:18:02.532 TRACE [product-composite,,,] 1 --- [or-http-epoll-3] o.s.w.s.adapter.HttpWebHandlerAdapter    : [e634b57b-78] HTTP GET "/actuator/info", headers={masked}
+  2026-11-11 08:18:02.545 TRACE [product-composite,c988d33310ad9c9a,c988d33310ad9c9a,false] 1 --- [or-http-epoll-3] o.s.w.s.adapter.HttpWebHandlerAdapter    : [e634b57b-78] Completed 200 OK, headers={masked}
+  2026-11-11 08:18:03.326 TRACE [product-composite,,,] 1 --- [or-http-epoll-4] o.s.w.s.adapter.HttpWebHandlerAdapter    : [d5b2445f-79] HTTP GET "/actuator/health", headers={masked}
+  2026-11-11 08:18:03.356 TRACE [product-composite,fdbdd0bd67e0ad58,fdbdd0bd67e0ad58,false] 1 --- [or-http-epoll-4] o.s.w.s.adapter.HttpWebHandlerAdapter    : [d5b2445f-79] Completed 200 OK, headers={masked}
+  2026-11-11 08:18:12.532 TRACE [product-composite,,,] 1 --- [or-http-epoll-1] o.s.w.s.adapter.HttpWebHandlerAdapter    : [36757ab3-80] HTTP GET "/actuator/info", headers={masked}
+  2026-11-11 08:18:12.537 TRACE [product-composite,30c04630d66afd06,30c04630d66afd06,false] 1 --- [or-http-epoll-1] o.s.w.s.adapter.HttpWebHandlerAdapter    : [36757ab3-80] Completed 200 OK, headers={masked}
+  2026-11-11 08:18:13.326 TRACE [product-composite,,,] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [981ac5a5-81] HTTP GET "/actuator/health", headers={masked}
+  2026-11-11 08:18:13.345 TRACE [product-composite,2494583c21c3405a,2494583c21c3405a,false] 1 --- [or-http-epoll-2] o.s.w.s.adapter.HttpWebHandlerAdapter    : [981ac5a5-81] Completed 200 OK, headers={masked}
+
+===== 2. IS THE 404 EMPTY DATA? query product-service directly =====
+pod/curl-probe2 created
+    product 1 (direct):
+  {"timestamp":"2026-11-11T08:18:17.581+00:00","path":"/product/1","status":404,"error":"Not Found","message":null,"requestId":"076d26d7-84"}  http=404
+  
+    product 213 (book seed id):
+  {"timestamp":"2026-11-11T08:18:17.621+00:00","path":"/product/213","status":404,"error":"Not Found","message":null,"requestId":"c3fd30a0-85"}  http=404
+  
+    composite 213:
+  {"timestamp":"2026-11-11T08:18:17.768761Z","path":"/product-composite/213","message":"No product found for productId: 213","error":"Not Found","status":404}  http=404
+  
+
+===== 3. MONGODB: is it simply empty? =====
+      file: WiredTiger
+      file: WiredTiger.lock
+      file: WiredTiger.turtle
+      file: WiredTiger.wt
+      file: WiredTigerLAS.wt
+      (empty listing = fresh, unseeded volume)
+
+===== 4. Did the services register by Service DNS (Endpointslices)? =====
+  auth-server         <none>
+  config-server       <none>
+  gateway             <none>
+  kubernetes          <none>
+  mongodb             <none>
+  mysql               <none>
+  nginx-service       <none>
+  product-composite   <none>
+  product             <none>
+  rabbitmq            <none>
+  recommendation      <none>
+  review              <none>
+
+===== 5. FINAL =====
+  pods 1/1: 11 of 12
+  disk 6.7G avail
