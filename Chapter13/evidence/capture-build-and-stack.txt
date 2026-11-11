@@ -1,0 +1,99 @@
+===== 0. INFRA (containers from ch12 are already running) =====
+  containers: ch7kafka ch7rabbit ch7zk ch6mysql ch6mongo 
+  ports: 3306=2 27017=2 9092=2 5672=2
+
+===== 1. FREE EVERY PORT THE STACK OWNS (ch12's lesson) =====
+  ports still bound: 0
+
+===== 2. BUILD =====
+  wrapper: gradle-5.6.4-bin.zip  java: openjdk version "11.0.25" 2024-10-15 LTS
+BUILD SUCCESSFUL in 1m 44s
+49 actionable tasks: 49 executed
+
+===== 3. CH13's NEW CONFIG (resilience) — read from source, not assumed =====
+  resilience4j + retry deps present: 3
+    resilience4j.circuitbreaker:
+      backends:
+        product:
+          registerHealthIndicator: true
+          ringBufferSizeInClosedState: 5
+    resilience4j.retry:
+      backends:
+        product:
+          maxRetryAttempts: 3
+    app.product-service.timeoutSec: 2
+
+===== 4. START: config server, eureka, auth, gateway, 4 services =====
+  config-server Started: 1  8888: 1
+  eureka Started: 1  8761: 1
+  cipher decryption check: "app.eureka-password":"p"
+  product-service Started: 1  eureka-401: 0
+  review-service Started: 1  eureka-401: 0
+  recommendation-service Started: 1  eureka-401: 0
+  product-composite-service Started: 1  eureka-401: 0
+  eureka registry: "name":"AUTH-SERVER" "name":"GATEWAY" "name":"PRODUCT" "name":"PRODUCT-COMPOSITE" "name":"RECOMMENDATION" "name":"REVIEW" 
+
+===== 5. CIRCUIT BREAKER HEALTH INDICATOR (the chapter's own instrument) =====
+    overall: UP
+    binders: UP
+    circuitBreakers: UP
+    clientConfigServer: UP
+    discoveryComposite: UP
+    diskSpace: UP
+    hystrix: UP
+    ping: UP
+    rabbit: UP
+    reactiveDiscoveryClients: UP
+    refreshScope: UP
+
+===== 6. THE BREAKER UNDER TEST: kill the product service, observe it open =====
+  before: /product-composite/1 through the composite
+    token: FAILED
+    200 expected -> HTTP=401
+  killing product-service (port 7001)
+capture-ch13.sh: line 123: 30237 Killed                  nohup java -jar microservices/$s/build/libs/*.jar --server.port=$P > /tmp/c13_$s.log 2>&1
+  requests while the dependency is down (each retries then trips):
+    attempt 1 -> HTTP=401
+    attempt 2 -> HTTP=401
+    attempt 3 -> HTTP=401
+    attempt 4 -> HTTP=401
+    attempt 5 -> HTTP=401
+    attempt 6 -> HTTP=401
+  composite log: circuit breaker + retry evidence
+    breaker/retry lines: 1
+
+  health now (breaker should be OPEN -> overall DOWN or circuitBreakers component):
+    overall: UP
+    circuitBreakers: UP {"product": {"status": "UP", "details": {"failureRate": "-1.0%", "failureRateThreshold": "50.0%", "slowCallRate": "-1.0%", "slowCallRateThreshold": "100.0%", "b
+
+===== 7. RECOVERY: restart product, watch the breaker half-open and close =====
+    post-recovery 1 -> HTTP=401
+    post-recovery 2 -> HTTP=401
+    post-recovery 3 -> HTTP=401
+    post-recovery 4 -> HTTP=401
+    overall after recovery: UP
+
+===== 8. THE BOOK'S OWN SUITE =====
+  PORT default: :${PORT=8443}
+Test OK (actual value: 3)
+Test OK (HTTP Code: 200)
+Test OK (actual value: 2)
+Test OK (actual value: 3)
+Test OK (actual value: 3)
+Test OK (HTTP Code: 404, {"timestamp":"2026-11-11T05:34:38.994083Z","path":"/product-composite/13","message":"Product Id: 13 not found in fallback cache!","error":"Not Found","status":404})
+Test OK (HTTP Code: 200)
+Test OK (actual value: 114)
+Test OK (actual value: 0)
+Test OK (actual value: 3)
+Test OK (HTTP Code: 200)
+Test OK (actual value: 214)
+Test OK (actual value: 3)
+Test OK (actual value: 0)
+Test OK (HTTP Code: 422, {"timestamp":"2026-11-11T05:34:39.292361Z","path":"/product-composite/-1","message":"Invalid productId: -1","error":"Unprocessable Entity","status":422})
+Test OK (actual value: "Invalid productId: -1")
+Test OK (HTTP Code: 400, {"timestamp":"2026-11-11T05:34:39.341+00:00","path":"/product-composite/invalidProductId","status":400,"error":"Bad Request","message":"Type mismatch.","requestId":"94b70643-28"})
+Test OK (actual value: "Type mismatch.")
+Test OK (HTTP Code: 401, )
+Test OK (HTTP Code: 200)
+Test OK (HTTP Code: 403, )
+Test FAILED, EXPECTED VALUE: CLOSED, ACTUAL VALUE: , WILL ABORT

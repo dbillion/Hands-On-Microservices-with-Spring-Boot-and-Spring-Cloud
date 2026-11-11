@@ -1,0 +1,69 @@
+Start Tests: Wed Nov 11 05:46:07 UTC 2026
+HOST=localhost
+PORT=8443
+Wait for: curl -k https://localhost:8443/actuator/health... DONE, continues...
+Test OK (HTTP Code: 200)
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   320    0     0  100   320      0   8992 --:--:-- --:--:-- --:--:--  9142
+Test OK (HTTP Code: 200)
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   313    0     0  100   313      0  11545 --:--:-- --:--:-- --:--:-- 11592
+Test OK (HTTP Code: 200)
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   609    0     0  100   609      0  19956 --:--:-- --:--:-- --:--:-- 20300
+Wait for messages to be processed... 
+Test OK (HTTP Code: 200)
+Test OK (actual value: 2)
+Test OK (actual value: 3)
+Test OK (actual value: 3)
+All messages are now processed!
+Test OK (HTTP Code: 200)
+Test OK (actual value: 2)
+Test OK (actual value: 3)
+Test OK (actual value: 3)
+Test OK (HTTP Code: 404, {"timestamp":"2026-11-11T05:46:09.781177Z","path":"/product-composite/13","message":"Product Id: 13 not found in fallback cache!","status":404,"error":"Not Found"})
+Test OK (HTTP Code: 200)
+Test OK (actual value: 114)
+Test OK (actual value: 0)
+Test OK (actual value: 3)
+Test OK (HTTP Code: 200)
+Test OK (actual value: 214)
+Test OK (actual value: 3)
+Test OK (actual value: 0)
+Test OK (HTTP Code: 422, {"timestamp":"2026-11-11T05:46:09.97722Z","path":"/product-composite/-1","message":"Invalid productId: -1","status":422,"error":"Unprocessable Entity"})
+Test OK (actual value: "Invalid productId: -1")
+Test OK (HTTP Code: 400, {"timestamp":"2026-11-11T05:46:10.020+00:00","path":"/product-composite/invalidProductId","status":400,"error":"Bad Request","message":"Type mismatch.","requestId":"7ff7c115-31"})
+Test OK (actual value: "Type mismatch.")
+Test OK (HTTP Code: 401, )
+Test OK (HTTP Code: 200)
+Test OK (HTTP Code: 403, )
+Start Circuit Breaker tests!
+Test OK (actual value: CLOSED)
+Test OK (HTTP Code: 500, {"timestamp":"2026-11-11T05:46:12.279+00:00","path":"/product-composite/2","status":500,"error":"Internal Server Error","message":"Did not observe any item or terminal signal within 2000ms in 'onErrorResume' (and no fallback has been configured)","requestId":"7ff7c115-35"})
+Test OK (actual value: Did not observe any item or terminal signal within 2000ms)
+Test OK (HTTP Code: 500, {"timestamp":"2026-11-11T05:46:14.313+00:00","path":"/product-composite/2","status":500,"error":"Internal Server Error","message":"Did not observe any item or terminal signal within 2000ms in 'onErrorResume' (and no fallback has been configured)","requestId":"7ff7c115-36"})
+Test OK (actual value: Did not observe any item or terminal signal within 2000ms)
+Test OK (HTTP Code: 500, {"timestamp":"2026-11-11T05:46:16.347+00:00","path":"/product-composite/2","status":500,"error":"Internal Server Error","message":"Did not observe any item or terminal signal within 2000ms in 'onErrorResume' (and no fallback has been configured)","requestId":"7ff7c115-37"})
+Test OK (actual value: Did not observe any item or terminal signal within 2000ms)
+Test OK (HTTP Code: 200)
+Test OK (actual value: Fallback product2)
+Test OK (HTTP Code: 200)
+Test OK (actual value: Fallback product2)
+Test OK (HTTP Code: 404, {"timestamp":"2026-11-11T05:46:16.498345Z","path":"/product-composite/13","message":"Product Id: 13 not found in fallback cache!","status":404,"error":"Not Found"})
+Test OK (actual value: Product Id: 13 not found in fallback cache!)
+Will sleep for 10 sec waiting for the CB to go Half Open...
+Test OK (actual value: HALF_OPEN)
+Test OK (HTTP Code: 200)
+Test OK (actual value: product name C)
+Test OK (HTTP Code: 200)
+Test OK (actual value: product name C)
+Test OK (HTTP Code: 200)
+Test OK (actual value: product name C)
+Test OK (actual value: CLOSED)
+Test OK (actual value: CLOSED_TO_OPEN)
+Test OK (actual value: OPEN_TO_HALF_OPEN)
+Test OK (actual value: HALF_OPEN_TO_CLOSED)
+End, all tests OK: Wed Nov 11 05:46:26 UTC 2026

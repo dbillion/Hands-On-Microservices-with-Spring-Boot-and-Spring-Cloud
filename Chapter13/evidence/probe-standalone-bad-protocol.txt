@@ -1,0 +1,44 @@
+===== 0. STACK MUST BE WHOLE (product service up) BEFORE THE BREAKER TEST =====
+  product-service 7001: 1
+  composite 7000 up:    1
+  eureka sees: 
+
+===== 1. TOKEN (the fix: gateway, not auth-server) =====
+    token: acquired
+
+===== 2. THE BOOK'S testCircuitBreaker() =====
+  2a. breaker starts CLOSED (health via composite HTTP:7000, API via gateway HTTPS:8443)
+    OK   [state before any slow call] CLOSED
+  2b. three slow calls (?delay=3 vs timeout 2000ms) -> 500 + timeout message
+    OK   [slow call 1] HTTP 500
+    OK   [slow call 1 message] Did not observe any item or terminal signal within 2000ms
+    OK   [slow call 2] HTTP 500
+    OK   [slow call 2 message] Did not observe any item or terminal signal within 2000ms
+    OK   [slow call 3] HTTP 500
+    OK   [slow call 3 message] Did not observe any item or terminal signal within 2000ms
+  2c. breaker OPEN: slow call now fails fast -> 200 + fallback
+    OK   [slow call while OPEN (fail fast)] HTTP 200
+    FAIL [fallback body] expected 'Fallback product2' got 'Fallback product1'
+  2d. breaker OPEN: a NORMAL call also returns the fallback
+    OK   [normal call while OPEN] HTTP 200
+    FAIL [fallback body on normal call] expected 'Fallback product2' got 'Fallback product1'
+  2e. fallback returns 404 for a missing productId
+    FAIL [fallback 404] expected HTTP 404 got 200
+    FAIL [fallback 404 message] expected 'Product Id: 14 not found in fallback cache!' got 'null'
+    breaker state now: OPEN
+  2f. wait for HALF_OPEN
+    OK   [state after 10s] HALF_OPEN
+  2g. three normal calls close it, and hit the real DB
+    FAIL [recovery call 1] expected HTTP 200 got 404
+    FAIL [recovery call 1 body] expected 'product name C' got 'null'
+    FAIL [recovery call 2] expected HTTP 200 got 404
+    FAIL [recovery call 2 body] expected 'product name C' got 'null'
+    FAIL [recovery call 3] expected HTTP 200 got 404
+    FAIL [recovery call 3 body] expected 'product name C' got 'null'
+    FAIL [state after recovery] expected 'CLOSED' got 'HALF_OPEN'
+  2h. state-transition history (the recorded events)
+    FAIL [transition -3] expected 'CLOSED_TO_OPEN' got 'null'
+    FAIL [transition -2] expected 'OPEN_TO_HALF_OPEN' got 'CLOSED_TO_OPEN'
+    FAIL [transition -1] expected 'HALF_OPEN_TO_CLOSED' got 'OPEN_TO_HALF_OPEN'
+
+===== RESULT: 10 passed, 14 failed =====

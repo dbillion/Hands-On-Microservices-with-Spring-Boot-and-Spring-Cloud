@@ -1,0 +1,43 @@
+===== 0. RESET THE BREAKER (restart the composite: its breaker starts CLOSED) =====
+  composite: port=1 Started=1
+  breaker state after restart: CLOSED
+
+===== 1. TOKEN from the gateway (8443), not the auth server (9999) =====
+    token: acquired
+
+===== 2. THE BOOK'S testCircuitBreaker(), with the book's product IDs =====
+  2a. breaker starts CLOSED
+    OK   [state before any slow call] CLOSED
+  2b. three slow calls (?delay=3 vs the 2000ms timeout) -> 500 + timeout message
+    OK   [slow call 1] HTTP 500
+    OK   [slow call 1 message] Did not observe any item or terminal signal within 2000ms
+    OK   [slow call 2] HTTP 500
+    OK   [slow call 2 message] Did not observe any item or terminal signal within 2000ms
+    OK   [slow call 3] HTTP 500
+    OK   [slow call 3 message] Did not observe any item or terminal signal within 2000ms
+  2c. breaker OPEN: slow call fails fast -> 200 + fallback
+    FAIL [slow call while OPEN] expected HTTP 200 got 500
+    FAIL [fallback body] expected 'Fallback product2' got 'null'
+  2d. breaker OPEN: a NORMAL call also returns the fallback
+    OK   [normal call while OPEN] HTTP 200
+    FAIL [fallback body (normal)] expected 'Fallback product2' got 'product name C'
+  2e. fallback returns 404 for PROD_ID_NOT_FOUND=13
+    OK   [fallback 404] HTTP 404
+    OK   [fallback 404 message] Product Id: 13 not found in fallback cache!
+    breaker state now: OPEN
+  2f. wait 10s for HALF_OPEN
+    OK   [state after 10s] HALF_OPEN
+  2g. three normal calls close it and reach the real DB
+    OK   [recovery call 1] HTTP 200
+    OK   [recovery call 1 body] product name C
+    OK   [recovery call 2] HTTP 200
+    OK   [recovery call 2 body] product name C
+    OK   [recovery call 3] HTTP 200
+    OK   [recovery call 3 body] product name C
+    OK   [state after recovery] CLOSED
+  2h. state-transition history
+    OK   [transition -3] CLOSED_TO_OPEN
+    OK   [transition -2] OPEN_TO_HALF_OPEN
+    OK   [transition -1] HALF_OPEN_TO_CLOSED
+
+===== RESULT: 21 passed, 3 failed =====
